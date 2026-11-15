@@ -1,0 +1,36 @@
+setup_name: "barcelona_R8_A"
+vehicle_id: "audi_r8_lms_gt3_evo2"
+
+# 1. Tyres & Alignment (Per-wheel [FL, FR, RL, RR])
+tyres_and_alignment:
+  cold_pressure_psi: [25.0, 25.8, 24.3, 25.5]
+  toe_deg: [-0.20, -0.20, 0.20, 0.20]          # [FL, FR, RL, RR]
+  camber_deg: [-4.0, -4.0, -3.5, -3.5]         # [FL, FR, RL, RR]
+  caster_deg: [14.5, 14.5]                     # [FL, FR] Front wheels only
+
+# 2. Mechanical Grip & Springs
+suspension:
+  wheel_rate_n_m: [153000, 153000, 163000, 163000]  # [FL, FR, RL, RR] in N/m
+  bumpstop_rate_n_mm: [1000, 1000, 300, 300]        # [FL, FR, RL, RR] in N/mm
+  bumpstop_range_clicks: [5, 5, 14, 14]               # [FL, FR, RL, RR] integer clicks
+  arb_clicks: [4, 2]                                # [Front, Rear] integer clicks
+steering_ratio: 16.0
+drivetrain_and_brakes:
+  preload_diff_nm: 140.0                     # Differential preload in Nm
+  brake_bias_pct: 54.6                       # Front brake bias percentage (%)
+
+# 3. Dampers (Per-wheel [FL, FR, RL, RR] integer clicks)
+dampers_clicks:
+  bump_slow: [22, 22, 20, 20]
+  bump_fast: [20, 20, 18, 18]
+  rebound_slow: [25, 25, 22, 22]
+  rebound_fast: [30, 30, 25, 25]
+
+# 4. Aero
+aero_clicks:
+  rear_wing: 5                                 # Integer clicks
+  front_splitter: 0                            # Integer clicks
+  brake_ducts: [2, 3]                          # [Rear, Front] integer clicks
+ride_height_mm: [66, 54]          # [Rear, Front])
+
+fuel: 2 #Liters

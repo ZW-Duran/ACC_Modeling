@@ -1,0 +1,8 @@
+experiment_name: "stage2_barcelona_gt3_r8_A"
+car_config: "configs/cars/audi_r8_gt3_evo2/vehicle.yaml"
+setup_config: "configs/cars/audi_r8_gt3_evo2/setups/Barcelona/r8_A.yaml"
+track_config: "configs/tracks/barcelona_catalunya.yaml"
+curation_config: "configs/curation/motec_200hz_sg81.yaml"
+modeling_config: "configs/modeling/planar_force_stlsq.yaml"
+clean_csv: "data/barcelona_catalunya__audi_r8_gt3_evo2__r8_A__practice.csv"
+race_csv: "data/barcelona_catalunya__audi_r8_gt3_evo2__r8_A__race.csv"

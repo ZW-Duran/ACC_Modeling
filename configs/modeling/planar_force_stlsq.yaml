@@ -1,0 +1,8 @@
+formulation: "planar_force"
+stlsq_threshold: 0.01
+stlsq_alpha: 0.05
+normalize_columns: true
+bootstrap_n_resamples: 500
+bootstrap_block_seconds: 2.0
+random_seed: 42
+z_anomaly_threshold: 5.0

@@ -1,0 +1,36 @@
+setup_name: "barcelona_a1"
+vehicle_id: "audi_r8_gt4"
+
+# 1. Tyres & Alignment (Per-wheel [FL, FR, RL, RR])
+tyres_and_alignment:
+  cold_pressure_psi: [20.8, 22.2, 19.6, 21.2]
+  toe_deg: [-0.20, -0.20, 0.20, 0.20]          # [FL, FR, RL, RR]
+  camber_deg: [-4.5, -4.5, -3.5, -3.5]         # [FL, FR, RL, RR]
+  caster_deg: [10.8, 10.8]                     # [FL, FR] Front wheels only
+
+# 2. Mechanical Grip & Springs
+suspension:
+  wheel_rate_n_m: [160000, 160000, 146000, 146000]  # [FL, FR, RL, RR] in N/m
+  bumpstop_rate_n_mm: [600, 600, 500, 500]        # [FL, FR, RL, RR] in N/mm
+  bumpstop_range_clicks: [0, 0, 0, 0]             # [FL, FR, RL, RR] integer clicks
+  arb_clicks: [1, 0]                              # [Front, Rear] integer clicks
+steering_ratio: 16.0
+drivetrain_and_brakes:
+  preload_diff_nm: 40.0                     # Differential preload in Nm
+  brake_bias_pct: 52.4                      # Front brake bias percentage (%)
+
+# 3. Dampers (Per-wheel [FL, FR, RL, RR] integer clicks)
+dampers_clicks:
+  bump_slow: [12, 12, 10, 10]
+  bump_fast: [0, 0, 0, 0]
+  rebound_slow: [12, 12, 10, 10]
+  rebound_fast: [0, 0, 0, 0]
+
+# 4. Aero
+aero_clicks:
+  rear_wing: 1                                 # Integer clicks
+  front_splitter: 0                            # Integer clicks
+  brake_ducts: [3, 5]                          # [Rear, Front] integer clicks
+ride_height_mm: [112, 105]          # [Rear, Front])
+
+fuel: 2 #Liters

@@ -1,20 +1,32 @@
+# Raw & processed telemetry data
+data/**/*.csv
+data/**/*.ld
+data/**/*.ldx
 data/*.csv
 data/*.ld
 data/*.ldx
 processed_data/
 
+# Large tabular outputs (keep PNG plots and JSON reports tracked)
+outputs/**/*.csv
+*.log
+
+# Python & environments
 __pycache__/
 *.py[cod]
 *$py.class
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
 .venv/
 venv/
 env/
 .env
 
+# IDEs & OS
 .vscode/
 .idea/
 .DS_Store
-*.log
-
 notebooks/.ipynb_checkpoints/
-output/plots/

@@ -1,0 +1,28 @@
+track_id: "barcelona_catalunya"
+name: "Circuit de Barcelona-Catalunya"
+length_m: 4657.0
+corners:
+  - name: "T1-T2 Elf"
+    start_m: 350
+    end_m: 850
+  - name: "T3 Renault"
+    start_m: 850
+    end_m: 1450
+  - name: "T4 Repsol"
+    start_m: 1450
+    end_m: 1850
+  - name: "T5 Seat"
+    start_m: 1850
+    end_m: 2250
+  - name: "T7-T8 Chicane"
+    start_m: 2250
+    end_m: 2750
+  - name: "T9 Campsa"
+    start_m: 2750
+    end_m: 3250
+  - name: "T10 La Caixa"
+    start_m: 3250
+    end_m: 3750
+  - name: "T11-T14 Sector 3"
+    start_m: 3750
+    end_m: 4450

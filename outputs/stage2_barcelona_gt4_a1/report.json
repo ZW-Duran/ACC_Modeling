@@ -1,0 +1,242 @@
+{
+  "experiment": "r8_gt4_catalunya_planar",
+  "vehicle": "Audi R8 LMS GT4",
+  "circuit": "Circuit de Barcelona-Catalunya",
+  "formulation": "planar_force",
+  "equation": "dr/dt = +0.30240 * r +0.07313 * a_y +0.28794 * a_y_dot +1.74401 * a_y_dot/v +0.02185 * a_y-v*r +0.03716 * a_y*|a_x| -0.00000 * a_y*(a_x^2+a_y^2)/eta_P^2 -0.15901 * r*|r|",
+  "clean_metrics": {
+    "n_samples": 251723,
+    "r2": 0.5251177520430392,
+    "rmse": 0.3208094679325607,
+    "mae": 0.17775944034694277,
+    "diagnostics": {
+      "n_samples": 251723,
+      "mean": -0.01314381039076382,
+      "std": 0.32054073553280743,
+      "skewness": -0.8832915630652052,
+      "excess_kurtosis": 36.24487616343278,
+      "ks_statistic": 0.1349155584391591,
+      "ks_pvalue": 0.0,
+      "shapiro_statistic": 0.7993815979879172,
+      "shapiro_pvalue": 1.2006482648341807e-61,
+      "within_3sigma_pct": 98.20080008580861,
+      "beyond_5sigma_count": 1410,
+      "beyond_5sigma_pct": 0.560139518438919,
+      "omission_sweep": [
+        {
+          "z_threshold": 1.0,
+          "expected_omissions": 79874.35297077634,
+          "actual_omissions": 38086,
+          "expected_pct": 31.731050786291416,
+          "actual_pct": 15.13012319096785
+        },
+        {
+          "z_threshold": 2.0,
+          "expected_omissions": 11453.462928783023,
+          "actual_omissions": 10246,
+          "expected_pct": 4.550026389635839,
+          "actual_pct": 4.070347167322811
+        },
+        {
+          "z_threshold": 2.5,
+          "expected_omissions": 3126.2311696006905,
+          "actual_omissions": 6495,
+          "expected_pct": 1.2419330651552265,
+          "actual_pct": 2.580217143447361
+        },
+        {
+          "z_threshold": 3.0,
+          "expected_omissions": 679.6007644320439,
+          "actual_omissions": 4529,
+          "expected_pct": 0.26997960632601864,
+          "actual_pct": 1.799199914191393
+        },
+        {
+          "z_threshold": 3.5,
+          "expected_omissions": 117.11617932411893,
+          "actual_omissions": 3291,
+          "expected_pct": 0.046525815807105006,
+          "actual_pct": 1.3073894717606258
+        },
+        {
+          "z_threshold": 4.0,
+          "expected_omissions": 15.944760015916863,
+          "actual_omissions": 2406,
+          "expected_pct": 0.006334248366623972,
+          "actual_pct": 0.9558125399744958
+        },
+        {
+          "z_threshold": 5.0,
+          "expected_omissions": 0.14431358725629234,
+          "actual_omissions": 1410,
+          "expected_pct": 5.7330314375838657e-05,
+          "actual_pct": 0.560139518438919
+        }
+      ]
+    }
+  },
+  "bootstrap": {
+    "n_resamples": 500,
+    "block_size_frames": 400,
+    "terms": [
+      {
+        "name": "r",
+        "point_estimate": 0.3023987518478609,
+        "boot_mean": 0.317060520603806,
+        "boot_std": 0.3008934896404156,
+        "ci_95_low": -0.20556951263353784,
+        "ci_95_high": 0.960277952422744,
+        "t_statistic": 1.005002641330805,
+        "p_value": 0.3153826639627825
+      },
+      {
+        "name": "a_y",
+        "point_estimate": 0.07312545864402113,
+        "boot_mean": 0.05550767201987876,
+        "boot_std": 0.08295402836570176,
+        "ci_95_low": -0.09444186130815288,
+        "ci_95_high": 0.2230059886081853,
+        "t_statistic": 0.8815178730277992,
+        "p_value": 0.3784619875976168
+      },
+      {
+        "name": "a_y_dot",
+        "point_estimate": 0.28793572663493716,
+        "boot_mean": 0.2620879067698507,
+        "boot_std": 0.07861890344744861,
+        "ci_95_low": 0.12419090930900364,
+        "ci_95_high": 0.39811503400802434,
+        "t_statistic": 3.6624235903697464,
+        "p_value": 0.0002765334302968815
+      },
+      {
+        "name": "a_y_dot/v",
+        "point_estimate": 1.7440149660307827,
+        "boot_mean": 2.4589532625469035,
+        "boot_std": 2.2933634811844223,
+        "ci_95_low": -1.5445022745440746,
+        "ci_95_high": 6.294532585193649,
+        "t_statistic": 0.760461645238231,
+        "p_value": 0.44733785243817936
+      },
+      {
+        "name": "a_y-v*r",
+        "point_estimate": 0.021854653224187538,
+        "boot_mean": 0.019931002655647467,
+        "boot_std": 0.00886338206443558,
+        "ci_95_low": 0.003913581426724771,
+        "ci_95_high": 0.03789312615017936,
+        "t_statistic": 2.4657239262966653,
+        "p_value": 0.014009002008832651
+      },
+      {
+        "name": "a_y*|a_x|",
+        "point_estimate": 0.03716027444699628,
+        "boot_mean": 0.03915117176772049,
+        "boot_std": 0.020413325524315448,
+        "ci_95_low": -0.0033105607041646976,
+        "ci_95_high": 0.07624428922712352,
+        "t_statistic": 1.8203929782402484,
+        "p_value": 0.06929803923855811
+      },
+      {
+        "name": "a_y*(a_x^2+a_y^2)/eta_P^2",
+        "point_estimate": -1.1274442121352897e-07,
+        "boot_mean": -1.326077207828341e-07,
+        "boot_std": 1.1837776340246916e-07,
+        "ci_95_low": -4.496353828591769e-07,
+        "ci_95_high": -8.913787390311083e-09,
+        "t_statistic": -0.9524121589475588,
+        "p_value": 0.34134909334053165
+      },
+      {
+        "name": "r*|r|",
+        "point_estimate": -0.15901025055187337,
+        "boot_mean": -0.1872941392735127,
+        "boot_std": 0.2917624626303363,
+        "ci_95_low": -0.8179745715175404,
+        "ci_95_high": 0.3283486481957109,
+        "t_statistic": -0.5449990006196915,
+        "p_value": 0.5859976968920826
+      }
+    ]
+  },
+  "race_metrics": {
+    "n_samples": 141960,
+    "r2": 0.4227000925322866,
+    "rmse": 0.4018873673177765,
+    "mae": 0.19854413115129319,
+    "diagnostics": {
+      "n_samples": 141960,
+      "mean": -0.013191180619333668,
+      "std": 0.40167223613903563,
+      "skewness": 0.35112120354785986,
+      "excess_kurtosis": 60.13642679936982,
+      "ks_statistic": 0.16657079124339402,
+      "ks_pvalue": 0.0,
+      "shapiro_statistic": 0.701330541236072,
+      "shapiro_pvalue": 2.1019494963816247e-69,
+      "within_3sigma_pct": 97.68174133558749,
+      "beyond_5sigma_count": 1412,
+      "beyond_5sigma_pct": 0.9946463792617639,
+      "omission_sweep": [
+        {
+          "z_threshold": 1.0,
+          "expected_omissions": 45045.39969621929,
+          "actual_omissions": 22161,
+          "expected_pct": 31.731050786291416,
+          "actual_pct": 15.610735418427726
+        },
+        {
+          "z_threshold": 2.0,
+          "expected_omissions": 6459.217462727037,
+          "actual_omissions": 6496,
+          "expected_pct": 4.550026389635839,
+          "actual_pct": 4.575936883629192
+        },
+        {
+          "z_threshold": 2.5,
+          "expected_omissions": 1763.0481792943594,
+          "actual_omissions": 4470,
+          "expected_pct": 1.2419330651552265,
+          "actual_pct": 3.1487743026204567
+        },
+        {
+          "z_threshold": 3.0,
+          "expected_omissions": 383.26304914041606,
+          "actual_omissions": 3291,
+          "expected_pct": 0.26997960632601864,
+          "actual_pct": 2.3182586644125105
+        },
+        {
+          "z_threshold": 3.5,
+          "expected_omissions": 66.04804811976626,
+          "actual_omissions": 2584,
+          "expected_pct": 0.046525815807105006,
+          "actual_pct": 1.8202310510002817
+        },
+        {
+          "z_threshold": 4.0,
+          "expected_omissions": 8.992098981259392,
+          "actual_omissions": 2127,
+          "expected_pct": 0.006334248366623972,
+          "actual_pct": 1.4983093829247676
+        },
+        {
+          "z_threshold": 5.0,
+          "expected_omissions": 0.08138611428794056,
+          "actual_omissions": 1412,
+          "expected_pct": 5.7330314375838657e-05,
+          "actual_pct": 0.9946463792617639
+        }
+      ]
+    },
+    "corner_anomalies": {
+      "T11-T14 Sector 3": 684,
+      "T3 Renault": 331,
+      "T7-T8 Chicane": 190,
+      "T10 La Caixa": 154,
+      "T5 Seat": 53
+    }
+  }
+}

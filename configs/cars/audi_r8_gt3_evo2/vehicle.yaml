@@ -1,0 +1,51 @@
+vehicle_id: "audi_r8_gt3_evo2" 
+name: "Audi R8 LMS GT3 Evo II"
+class: "GT3" 
+drivetrain: "RWD"
+layout: "Mid-Engine V10"
+# 1. Immutable Rigid-Body & Geometry Constants
+chassis:
+  mass_kg: 1285.0 # Dry chassis mass without fuel
+  front_weight_dist: 0.43
+  wheelbase_m: 2.70 # FIA GT3 homologated wheelbase (2700 mm)
+  track_width_front_m: 1.67
+  track_width_rear_m: 1.65
+  cog_height_m: 0.42
+  target_hot_pressure_psi: 27.0
+  tire_sigma_p_psi: 1.5
+
+# 2. Baseline Aerodynamics (Replaces deprecated aero_profile)
+aero_baseline:
+  reference_area_m2: 2.08
+  base_cl: 0.95               # Zero-wing baseline downforce coefficient (nominal; refine after calibration)
+  base_cd: 0.38               # Zero-wing baseline drag coefficient
+  base_aero_front_dist: 0.44
+
+# 3. Black-Box Click-to-Physical Calibration Slots (Populated via telemetry identification)
+calibration_slots:
+  bumpstop_range_mm:               # Calibrated via SUSP_POS at BUMPSTOPUP > 0 threshold
+    front_base_mm: null
+    front_per_click_mm: null
+    rear_base_mm: null
+    rear_per_click_mm: null
+  arb_stiffness_n_m:               # Calibrated via steady-state cornering roll differential
+    front_base: null
+    front_per_click: null
+    rear_base: null
+    rear_per_click: null
+  dampers_n_s_m:                   # Calibrated via Virtual Damper Dyno (straight braking + curbs)
+    knee_velocity_mps: 0.05
+    bump_slow_base: null
+    bump_slow_per_click: null
+    bump_fast_base: null
+    bump_fast_per_click: null
+    rebound_slow_base: null
+    rebound_slow_per_click: null
+    rebound_fast_base: null
+    rebound_fast_per_click: null
+  aero_clicks:                     # Calibrated via straight-line Vmax / coastdown & high-speed Fz
+    rear_wing_dcl_per_click: null
+    rear_wing_dcd_per_click: null
+    front_splitter_dcl_per_click: null
+    front_splitter_df_dist_per_click: null
+    brake_duct_dcd_per_click: null # Minor drag effect; primary effect is brake/tyre thermal

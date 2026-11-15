@@ -1,0 +1,244 @@
+{
+  "experiment": "r8_gt3_catalunya_planar",
+  "vehicle": "Audi R8 LMS GT3 Evo II",
+  "circuit": "Circuit de Barcelona-Catalunya",
+  "formulation": "planar_force",
+  "equation": "dr/dt = +0.11616 * r -0.03716 * a_y +0.11743 * a_y_dot +6.74440 * a_y_dot/v +0.00894 * a_y-v*r +0.04018 * a_y*|a_x| +0.01132 * a_y*(a_x^2+a_y^2)/eta_P^2 -0.06274 * r*|r|",
+  "clean_metrics": {
+    "n_samples": 215563,
+    "r2": 0.4086128147202428,
+    "rmse": 0.5189267821969611,
+    "mae": 0.2565343550631112,
+    "diagnostics": {
+      "n_samples": 215563,
+      "mean": -0.013562979995482451,
+      "std": 0.5187507100954649,
+      "skewness": 0.32587835823769784,
+      "excess_kurtosis": 36.223233068289304,
+      "ks_statistic": 0.16679488455088753,
+      "ks_pvalue": 0.0,
+      "shapiro_statistic": 0.6714798106853366,
+      "shapiro_pvalue": 2.487266981208343e-71,
+      "within_3sigma_pct": 97.95280266093903,
+      "beyond_5sigma_count": 2004,
+      "beyond_5sigma_pct": 0.929658614882888,
+      "omission_sweep": [
+        {
+          "z_threshold": 1.0,
+          "expected_omissions": 68400.40500645337,
+          "actual_omissions": 21358,
+          "expected_pct": 31.731050786291416,
+          "actual_pct": 9.90800833167102
+        },
+        {
+          "z_threshold": 2.0,
+          "expected_omissions": 9808.173386290704,
+          "actual_omissions": 7464,
+          "expected_pct": 4.550026389635839,
+          "actual_pct": 3.4625608290847687
+        },
+        {
+          "z_threshold": 2.5,
+          "expected_omissions": 2677.148173240561,
+          "actual_omissions": 5530,
+          "expected_pct": 1.2419330651552265,
+          "actual_pct": 2.565375319512161
+        },
+        {
+          "z_threshold": 3.0,
+          "expected_omissions": 581.9761387845556,
+          "actual_omissions": 4413,
+          "expected_pct": 0.26997960632601864,
+          "actual_pct": 2.0471973390609706
+        },
+        {
+          "z_threshold": 3.5,
+          "expected_omissions": 100.29244432826975,
+          "actual_omissions": 3573,
+          "expected_pct": 0.046525815807105006,
+          "actual_pct": 1.6575200753376045
+        },
+        {
+          "z_threshold": 4.0,
+          "expected_omissions": 13.654295806545635,
+          "actual_omissions": 2892,
+          "expected_pct": 0.006334248366623972,
+          "actual_pct": 1.341603150819018
+        },
+        {
+          "z_threshold": 5.0,
+          "expected_omissions": 0.12358294557798909,
+          "actual_omissions": 2004,
+          "expected_pct": 5.7330314375838657e-05,
+          "actual_pct": 0.929658614882888
+        }
+      ]
+    }
+  },
+  "bootstrap": {
+    "n_resamples": 500,
+    "block_size_frames": 400,
+    "terms": [
+      {
+        "name": "r",
+        "point_estimate": 0.11616025092964284,
+        "boot_mean": 0.05063652722716031,
+        "boot_std": 0.47576582133788103,
+        "ci_95_low": -0.8839512538877677,
+        "ci_95_high": 0.8857414684937334,
+        "t_statistic": 0.2441542576618755,
+        "p_value": 0.8072117055840736
+      },
+      {
+        "name": "a_y",
+        "point_estimate": -0.03715947478684434,
+        "boot_mean": -0.035836289730479205,
+        "boot_std": 0.08850782348596803,
+        "ci_95_low": -0.21415392613681702,
+        "ci_95_high": 0.12808095117933863,
+        "t_statistic": -0.41984395642420896,
+        "p_value": 0.6747801568282936
+      },
+      {
+        "name": "a_y_dot",
+        "point_estimate": 0.11742830136953054,
+        "boot_mean": 0.11276793245326233,
+        "boot_std": 0.029030348405224945,
+        "ci_95_low": 0.054921178225768974,
+        "ci_95_high": 0.17052782998798374,
+        "t_statistic": 4.045018672541854,
+        "p_value": 6.0607849082423116e-05
+      },
+      {
+        "name": "a_y_dot/v",
+        "point_estimate": 6.744395411569125,
+        "boot_mean": 6.883360934490447,
+        "boot_std": 0.841071308233116,
+        "ci_95_low": 5.174585702117578,
+        "ci_95_high": 8.447580280547474,
+        "t_statistic": 8.018815224760719,
+        "p_value": 7.65061236282947e-15
+      },
+      {
+        "name": "a_y-v*r",
+        "point_estimate": 0.008940322634063236,
+        "boot_mean": 0.007962549771971647,
+        "boot_std": 0.0077210452491930275,
+        "ci_95_low": -0.0056958930188228275,
+        "ci_95_high": 0.02221824767394533,
+        "t_statistic": 1.1579161040401418,
+        "p_value": 0.247452182798812
+      },
+      {
+        "name": "a_y*|a_x|",
+        "point_estimate": 0.04017548996666855,
+        "boot_mean": 0.04247786597421092,
+        "boot_std": 0.02140139339362917,
+        "ci_95_low": 0.002161375004197985,
+        "ci_95_high": 0.08417359101959505,
+        "t_statistic": 1.8772371138520407,
+        "p_value": 0.06106875298290663
+      },
+      {
+        "name": "a_y*(a_x^2+a_y^2)/eta_P^2",
+        "point_estimate": 0.011324375892417282,
+        "boot_mean": 0.01085724352995396,
+        "boot_std": 0.00849927652635843,
+        "ci_95_low": -0.004790641347504631,
+        "ci_95_high": 0.027217043303535415,
+        "t_statistic": 1.332392922773779,
+        "p_value": 0.18333923836114707
+      },
+      {
+        "name": "r*|r|",
+        "point_estimate": -0.0627421626511364,
+        "boot_mean": 0.006109772254141935,
+        "boot_std": 0.5046872537622731,
+        "ci_95_low": -0.9048483761815964,
+        "ci_95_high": 0.9584636830761215,
+        "t_statistic": -0.12431889686813916,
+        "p_value": 0.901112848169117
+      }
+    ]
+  },
+  "race_metrics": {
+    "n_samples": 131557,
+    "r2": 0.44565691633874016,
+    "rmse": 0.4802172860361542,
+    "mae": 0.23288512685653442,
+    "diagnostics": {
+      "n_samples": 131557,
+      "mean": -0.01368072442682544,
+      "std": 0.4800241984481562,
+      "skewness": -1.245236707872063,
+      "excess_kurtosis": 70.47459216562659,
+      "ks_statistic": 0.16301249519545336,
+      "ks_pvalue": 0.0,
+      "shapiro_statistic": 0.58036920637736,
+      "shapiro_pvalue": 2.0912831891565436e-76,
+      "within_3sigma_pct": 98.73210851570042,
+      "beyond_5sigma_count": 732,
+      "beyond_5sigma_pct": 0.5564128096566507,
+      "omission_sweep": [
+        {
+          "z_threshold": 1.0,
+          "expected_omissions": 41744.4184829214,
+          "actual_omissions": 11193,
+          "expected_pct": 31.731050786291416,
+          "actual_pct": 8.508099150938376
+        },
+        {
+          "z_threshold": 2.0,
+          "expected_omissions": 5985.87821741322,
+          "actual_omissions": 3032,
+          "expected_pct": 4.550026389635839,
+          "actual_pct": 2.3047044246980395
+        },
+        {
+          "z_threshold": 2.5,
+          "expected_omissions": 1633.8498825262614,
+          "actual_omissions": 2176,
+          "expected_pct": 1.2419330651552265,
+          "actual_pct": 1.6540358931869836
+        },
+        {
+          "z_threshold": 3.0,
+          "expected_omissions": 355.1770706943204,
+          "actual_omissions": 1668,
+          "expected_pct": 0.26997960632601864,
+          "actual_pct": 1.2678914842995812
+        },
+        {
+          "z_threshold": 3.5,
+          "expected_omissions": 61.20796750135313,
+          "actual_omissions": 1364,
+          "expected_pct": 0.046525815807105006,
+          "actual_pct": 1.0368129403984583
+        },
+        {
+          "z_threshold": 4.0,
+          "expected_omissions": 8.333147123679499,
+          "actual_omissions": 1092,
+          "expected_pct": 0.006334248366623972,
+          "actual_pct": 0.8300584537500855
+        },
+        {
+          "z_threshold": 5.0,
+          "expected_omissions": 0.07542204168342206,
+          "actual_omissions": 732,
+          "expected_pct": 5.7330314375838657e-05,
+          "actual_pct": 0.5564128096566507
+        }
+      ]
+    },
+    "corner_anomalies": {
+      "T9 Campsa": 261,
+      "T11-T14 Sector 3": 141,
+      "T5 Seat": 118,
+      "T4 Repsol": 101,
+      "T10 La Caixa": 83,
+      "T3 Renault": 21,
+      "T7-T8 Chicane": 7
+    }
+  }
+}
