@@ -6,7 +6,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from sindy_piml.features.base import CandidateLibrary, FeatureMatrix
+from src.features.base import CandidateLibrary, FeatureMatrix
 
 
 @dataclass

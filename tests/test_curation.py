@@ -3,9 +3,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from sindy_piml.config import CurationConfig
-from sindy_piml.data.curation import compute_tire_grip_factor, curate_telemetry, trim_session
-from sindy_piml.data.motec_loader import TelemetryMetadata
+from src.config import CurationConfig
+from src.data.curation import compute_tire_grip_factor, curate_telemetry, trim_session
+from src.data.motec_loader import TelemetryMetadata
 
 
 def _make_synthetic_df(n: int = 1000, dt: float = 0.005) -> tuple[pd.DataFrame, TelemetryMetadata]:

@@ -3,11 +3,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from sindy_piml.config import CarConfig, ModelingConfig, load_config
-from sindy_piml.features.planar_force import PlanarForceLibrary
-from sindy_piml.features.wheel_corner import estimate_corner_normal_load
-from sindy_piml.modeling.evaluator import evaluate_model
-from sindy_piml.modeling.trainer import fit_yaw_sindy
+from src.config import CarConfig, ModelingConfig, load_config
+from src.features.planar_force import PlanarForceLibrary
+from src.features.wheel_corner import estimate_corner_normal_load
+from src.modeling.evaluator import evaluate_model
+from src.modeling.trainer import fit_yaw_sindy
 
 
 def test_planar_force_library_recovers_synthetic_ode():
@@ -56,14 +56,24 @@ def test_modular_config_loading():
     assert gt3.car.vehicle_id == "audi_r8_gt3_evo2"
     assert np.isclose(gt3.car.wheelbase_m, 2.70)
     assert gt3.car.aero_baseline.reference_area_m2 == 2.08
-    assert gt3.car.aero_baseline.base_cl == 0.95
+    assert np.isclose(gt3.car.aero_baseline.base_cl, 1.177, atol=1e-3)
+    assert np.isclose(gt3.car.aero_baseline.base_aero_front_dist, 0.437, atol=1e-3)
+    assert gt3.car.calibration_slots["bumpstop_range_mm"]["front_base_mm"] == 17.0
+    assert gt3.car.calibration_slots["bumpstop_range_mm"]["front_per_click_mm"] == 1.0
     assert gt3.car.calibration_slots["dampers_n_s_m"]["knee_velocity_mps"] == 0.05
-    assert gt3.car.calibration_slots["dampers_n_s_m"]["bump_slow_base"] is None
+    assert gt3.car.calibration_slots["dampers_n_s_m"]["bump_slow_base"] > 0
+    assert gt3.car.calibration_slots["arb_stiffness_n_m"]["front_per_click"] > 0
+    assert gt3.car.calibration_slots["aero_clicks"]["rear_wing_dcl_per_click"] > 0
+    assert (
+        gt3.car.calibration_slots["aero_clicks"]["front_brake_duct_dcd_per_click"]
+        > gt3.car.calibration_slots["aero_clicks"]["rear_brake_duct_dcd_per_click"]
+        > 0
+    )
     assert gt3.setup["setup_name"] == "barcelona_R8_A"
     assert gt3.setup["suspension"]["arb_clicks"] == [4, 2]
     assert gt3.track.track_id == "barcelona_catalunya"
     assert len(gt3.track.corners) == 8
-    assert gt3.curation.savgol_window == 81
+    assert gt3.curation.savgol_window == 21
     assert gt3.modeling.formulation == "planar_force"
 
     gt4 = load_config(repo_root / "configs/experiments/stage2_planar_force/barcelona__audi_r8_gt4__a1.yaml")

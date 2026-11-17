@@ -6,8 +6,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from sindy_piml.features.base import FeatureMatrix
-from sindy_piml.modeling.trainer import FittedYawModel
+from src.features.base import FeatureMatrix
+from src.modeling.trainer import FittedYawModel
 
 
 @dataclass

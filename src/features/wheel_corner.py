@@ -7,8 +7,8 @@ from typing import Literal
 import numpy as np
 import pandas as pd
 
-from sindy_piml.config import CarConfig
-from sindy_piml.features.base import CandidateLibrary, FeatureMatrix
+from src.config import CarConfig
+from src.features.base import CandidateLibrary, FeatureMatrix
 
 WheelCorner = Literal["LF", "RF", "LR", "RR"]
 GRAVITY = 9.80665

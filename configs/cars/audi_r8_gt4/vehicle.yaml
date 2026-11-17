@@ -49,4 +49,5 @@ calibration_slots:
     rear_wing_dcd_per_click: null
     front_splitter_dcl_per_click: null
     front_splitter_df_dist_per_click: null
-    brake_duct_dcd_per_click: null # Minor drag effect; primary effect is brake/tyre thermal
+    front_brake_duct_dcd_per_click: null # Front cooling duct drag delta-Cd per click (click=0 -> base)
+    rear_brake_duct_dcd_per_click: null  # Rear cooling duct drag delta-Cd per click (click=0 -> base)

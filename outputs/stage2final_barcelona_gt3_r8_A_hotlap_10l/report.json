@@ -1,0 +1,164 @@
+{
+  "experiment": "stage2final_barcelona_gt3_r8_A_hotlap_10l",
+  "vehicle": "Audi R8 LMS GT3 Evo II",
+  "circuit": "Circuit de Barcelona-Catalunya",
+  "formulation": "planar_force",
+  "equation": "dr/dt = +2.52717 * r -0.45930 * a_y +0.29893 * a_y_dot -4.04541 * a_y_dot/v +0.01401 * a_y-v*r -0.10122 * a_y*|a_x| +0.04118 * a_y*(a_x^2+a_y^2)/eta_P^2 -2.21953 * r*|r|",
+  "clean_metrics": {
+    "n_samples": 21367,
+    "r2": 0.17009161103748338,
+    "rmse": 1.0774949410977293,
+    "mae": 0.678827326324284,
+    "diagnostics": {
+      "n_samples": 21367,
+      "mean": -0.03739035036364891,
+      "std": 1.0768712006592152,
+      "skewness": -0.06494423463140901,
+      "excess_kurtosis": 9.14494024524151,
+      "ks_statistic": 0.10499305503278578,
+      "ks_pvalue": 1.5172859069355338e-205,
+      "shapiro_statistic": 0.8831636944311394,
+      "shapiro_pvalue": 7.277199258224015e-52,
+      "within_3sigma_pct": 98.2168764917864,
+      "beyond_5sigma_count": 86,
+      "beyond_5sigma_pct": 0.40248982075162637,
+      "omission_sweep": [
+        {
+          "z_threshold": 1.0,
+          "expected_omissions": 6779.973621506887,
+          "actual_omissions": 4260,
+          "expected_pct": 31.731050786291416,
+          "actual_pct": 19.937286469789864
+        },
+        {
+          "z_threshold": 2.0,
+          "expected_omissions": 972.2041386734898,
+          "actual_omissions": 1163,
+          "expected_pct": 4.550026389635839,
+          "actual_pct": 5.442972808536528
+        },
+        {
+          "z_threshold": 2.5,
+          "expected_omissions": 265.36383803171725,
+          "actual_omissions": 647,
+          "expected_pct": 1.2419330651552265,
+          "actual_pct": 3.02803388402677
+        },
+        {
+          "z_threshold": 3.0,
+          "expected_omissions": 57.686542483680405,
+          "actual_omissions": 381,
+          "expected_pct": 0.26997960632601864,
+          "actual_pct": 1.7831235082136003
+        },
+        {
+          "z_threshold": 3.5,
+          "expected_omissions": 9.941171063504125,
+          "actual_omissions": 236,
+          "expected_pct": 0.046525815807105006,
+          "actual_pct": 1.1045069499695792
+        },
+        {
+          "z_threshold": 4.0,
+          "expected_omissions": 1.3534388484965443,
+          "actual_omissions": 176,
+          "expected_pct": 0.006334248366623972,
+          "actual_pct": 0.8237000982823981
+        },
+        {
+          "z_threshold": 5.0,
+          "expected_omissions": 0.012249768272685445,
+          "actual_omissions": 86,
+          "expected_pct": 5.7330314375838657e-05,
+          "actual_pct": 0.40248982075162637
+        }
+      ]
+    }
+  },
+  "bootstrap": {
+    "n_resamples": 500,
+    "block_size_frames": 400,
+    "terms": [
+      {
+        "name": "r",
+        "point_estimate": 2.5271734805962787,
+        "boot_mean": 2.474937261842337,
+        "boot_std": 1.9170121621584446,
+        "ci_95_low": -0.7374943470809758,
+        "ci_95_high": 6.43902874068284,
+        "t_statistic": 1.3182876616446855,
+        "p_value": 0.1880121556635529
+      },
+      {
+        "name": "a_y",
+        "point_estimate": -0.45929947701891327,
+        "boot_mean": -0.45610612645042375,
+        "boot_std": 0.2924262545228414,
+        "ci_95_low": -1.0708724106757466,
+        "ci_95_high": 0.030086991947716885,
+        "t_statistic": -1.5706506167456227,
+        "p_value": 0.11689766709663954
+      },
+      {
+        "name": "a_y_dot",
+        "point_estimate": 0.2989266517269282,
+        "boot_mean": 0.31481659166093423,
+        "boot_std": 0.0744507529675083,
+        "ci_95_low": 0.18844220787873672,
+        "ci_95_high": 0.4641558049306742,
+        "t_statistic": 4.015092390769848,
+        "p_value": 6.855969367852087e-05
+      },
+      {
+        "name": "a_y_dot/v",
+        "point_estimate": -4.045407391715275,
+        "boot_mean": -4.608787228507234,
+        "boot_std": 2.1872831808662303,
+        "ci_95_low": -9.813396547478995,
+        "ci_95_high": -1.2422014417221239,
+        "t_statistic": -1.8495124120659912,
+        "p_value": 0.06497498193414769
+      },
+      {
+        "name": "a_y-v*r",
+        "point_estimate": 0.014010457246340355,
+        "boot_mean": 0.013128542705665984,
+        "boot_std": 0.024173589432070555,
+        "ci_95_low": -0.03303911531345693,
+        "ci_95_high": 0.062486344606326204,
+        "t_statistic": 0.5795770332623006,
+        "p_value": 0.5624614499852469
+      },
+      {
+        "name": "a_y*|a_x|",
+        "point_estimate": -0.1012246562347503,
+        "boot_mean": -0.10401198340882005,
+        "boot_std": 0.11926795500956101,
+        "ci_95_low": -0.3474182835943089,
+        "ci_95_high": 0.09757348993507299,
+        "t_statistic": -0.8487162895233318,
+        "p_value": 0.3964461321103673
+      },
+      {
+        "name": "a_y*(a_x^2+a_y^2)/eta_P^2",
+        "point_estimate": 0.0411816369962399,
+        "boot_mean": 0.03840426539701367,
+        "boot_std": 0.056348683463143805,
+        "ci_95_low": -0.054748614415760656,
+        "ci_95_high": 0.15335691248105413,
+        "t_statistic": 0.7308358326273182,
+        "p_value": 0.46522244271058766
+      },
+      {
+        "name": "r*|r|",
+        "point_estimate": -2.2195270988785025,
+        "boot_mean": -2.152337411525549,
+        "boot_std": 1.8681432374227316,
+        "ci_95_low": -6.009419558798355,
+        "ci_95_high": 1.0268190718454713,
+        "t_statistic": -1.1880925693580842,
+        "p_value": 0.2353621090046319
+      }
+    ]
+  }
+}

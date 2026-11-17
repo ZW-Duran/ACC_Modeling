@@ -3,9 +3,9 @@ requires = ["setuptools>=68.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "sindy-piml"
+name = "acc-modeling"
 version = "0.2.0"
-description = "Physics-Informed Sparse Identification of Nonlinear Vehicle Yaw Dynamics from ACC MoTeC Telemetry"
+description = "Physics-Informed Vehicle Dynamics Modeling, Telemetry Calibration, and Multi-Stage Identification for Assetto Corsa Competizione"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
@@ -26,14 +26,15 @@ dev = [
 ]
 
 [project.scripts]
-sindy-piml = "sindy_piml.cli:main"
+acc-modeling = "src.cli:main"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = ["."]
+include = ["src*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src"]
+pythonpath = ["."]
 addopts = "-v"
 
 [tool.ruff]

@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 from scipy import stats
 
-from sindy_piml.modeling.evaluator import EvaluationResult
+from src.modeling.evaluator import EvaluationResult
 
 
 def plot_yaw_acceleration_fit(

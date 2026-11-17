@@ -10,8 +10,8 @@ import pandas as pd
 from scipy.integrate import cumulative_trapezoid
 from scipy.signal import savgol_filter
 
-from sindy_piml.config import CurationConfig
-from sindy_piml.data.motec_loader import TelemetryMetadata
+from src.config import CurationConfig
+from src.data.motec_loader import TelemetryMetadata
 
 logger = logging.getLogger(__name__)
 

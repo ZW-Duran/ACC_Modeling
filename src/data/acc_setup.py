@@ -49,7 +49,7 @@ def convert_acc_dict(
     mapping: AccSetupMapping,
     setup_name: str = "setup",
 ) -> dict[str, Any]:
-    """Translate a parsed ACC setup JSON payload into a SINDy-PIML setup dictionary."""
+    """Translate a parsed ACC setup JSON payload into a ACC_Modeling setup dictionary."""
     basic = raw["basicSetup"]
     tyres = basic["tyres"]
     align = basic["alignment"]

@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from sindy_piml.features.base import CandidateLibrary, FeatureMatrix
+from src.features.base import CandidateLibrary, FeatureMatrix
 
 
 class PlanarForceLibrary(CandidateLibrary):

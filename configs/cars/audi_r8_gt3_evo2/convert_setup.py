@@ -14,7 +14,7 @@ _SRC_ROOT = Path(__file__).resolve().parents[3] / "src"
 if str(_SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(_SRC_ROOT))
 
-from sindy_piml.data.acc_setup import AccSetupMapping, convert_acc_json_file, run_converter_cli
+from src.data.acc_setup import AccSetupMapping, convert_acc_json_file, run_converter_cli
 
 GT3_EVO2_MAPPING = AccSetupMapping(
     vehicle_id="audi_r8_gt3_evo2",

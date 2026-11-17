@@ -8,8 +8,8 @@ import numpy as np
 import pysindy as ps
 from scipy import stats
 
-from sindy_piml.config import ModelingConfig
-from sindy_piml.features.base import FeatureMatrix
+from src.config import ModelingConfig
+from src.features.base import FeatureMatrix
 
 
 @dataclass

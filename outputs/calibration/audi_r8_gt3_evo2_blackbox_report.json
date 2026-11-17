@@ -1,0 +1,312 @@
+{
+  "vehicle_id": "audi_r8_gt3_evo2",
+  "calibration_mass_kg": 1292.5,
+  "hotlap_fuel_liters": 10.0,
+  "stationary_datum_mm": {
+    "front": 15.0,
+    "rear": 17.0
+  },
+  "setup_consistency": {
+    "sessions": {
+      "baseline": {
+        "n_rows": 21367,
+        "vmax_kmh": 270.1,
+        "mean_pressures_psi": [
+          26.65,
+          27.0,
+          25.89,
+          26.93
+        ],
+        "bumpstop_thresholds_mm": {
+          "LF": 22.0,
+          "RF": 22.0,
+          "LR": 38.0,
+          "RR": 38.0
+        },
+        "roll_grad_mm_per_g": {
+          "front": 12.757,
+          "rear": 13.463
+        }
+      },
+      "test1": {
+        "n_rows": 22703,
+        "vmax_kmh": 273.2,
+        "mean_pressures_psi": [
+          26.05,
+          27.0,
+          25.76,
+          26.63
+        ],
+        "bumpstop_thresholds_mm": {
+          "LF": 22.0,
+          "RF": 22.0,
+          "LR": 38.0,
+          "RR": 38.0
+        },
+        "roll_grad_mm_per_g": {
+          "front": 13.017,
+          "rear": 12.943
+        }
+      },
+      "test2": {
+        "n_rows": 21289,
+        "vmax_kmh": 271.0,
+        "mean_pressures_psi": [
+          26.65,
+          27.0,
+          25.93,
+          26.93
+        ],
+        "bumpstop_thresholds_mm": {
+          "LF": 22.0,
+          "RF": 22.0,
+          "LR": 38.0,
+          "RR": 38.0
+        },
+        "roll_grad_mm_per_g": {
+          "front": 12.511,
+          "rear": 13.224
+        }
+      },
+      "test3": {
+        "n_rows": 21475,
+        "vmax_kmh": 269.5,
+        "mean_pressures_psi": [
+          26.64,
+          27.0,
+          25.77,
+          26.71
+        ],
+        "bumpstop_thresholds_mm": {
+          "LF": 22.0,
+          "RF": 22.0,
+          "LR": 38.0,
+          "RR": 38.0
+        },
+        "roll_grad_mm_per_g": {
+          "front": 12.702,
+          "rear": 13.313
+        }
+      },
+      "test4": {
+        "n_rows": 21277,
+        "vmax_kmh": 269.4,
+        "mean_pressures_psi": [
+          26.38,
+          26.95,
+          25.87,
+          26.93
+        ],
+        "bumpstop_thresholds_mm": {
+          "LF": 22.0,
+          "RF": 22.0,
+          "LR": 38.0,
+          "RR": 38.0
+        },
+        "roll_grad_mm_per_g": {
+          "front": 12.72,
+          "rear": 13.504
+        }
+      },
+      "test5": {
+        "n_rows": 21371,
+        "vmax_kmh": 269.9,
+        "mean_pressures_psi": [
+          26.65,
+          27.0,
+          25.92,
+          26.94
+        ],
+        "bumpstop_thresholds_mm": {
+          "LF": 19.0,
+          "RF": 19.0,
+          "LR": 34.0,
+          "RR": 34.0
+        },
+        "roll_grad_mm_per_g": {
+          "front": 12.232,
+          "rear": 13.6
+        }
+      },
+      "test6": {
+        "n_rows": 21330,
+        "vmax_kmh": 269.9,
+        "mean_pressures_psi": [
+          26.67,
+          27.0,
+          25.92,
+          26.94
+        ],
+        "bumpstop_thresholds_mm": {
+          "LF": 22.0,
+          "RF": 22.0,
+          "LR": 38.0,
+          "RR": 38.0
+        },
+        "roll_grad_mm_per_g": {
+          "front": 12.994,
+          "rear": 13.932
+        }
+      },
+      "test7": {
+        "n_rows": 21341,
+        "vmax_kmh": 270.0,
+        "mean_pressures_psi": [
+          26.67,
+          27.0,
+          25.94,
+          26.93
+        ],
+        "bumpstop_thresholds_mm": {
+          "LF": 22.0,
+          "RF": 22.0,
+          "LR": 38.0,
+          "RR": 38.0
+        },
+        "roll_grad_mm_per_g": {
+          "front": 13.906,
+          "rear": 13.195
+        }
+      },
+      "test9": {
+        "n_rows": 21428,
+        "vmax_kmh": 269.5,
+        "mean_pressures_psi": [
+          26.64,
+          27.0,
+          25.9,
+          26.93
+        ],
+        "bumpstop_thresholds_mm": {
+          "LF": 22.0,
+          "RF": 22.0,
+          "LR": 38.0,
+          "RR": 38.0
+        },
+        "roll_grad_mm_per_g": {
+          "front": 12.033,
+          "rear": 13.485
+        }
+      },
+      "test9_out": {
+        "n_rows": 13182,
+        "vmax_kmh": 215.9,
+        "mean_pressures_psi": [
+          25.36,
+          26.36,
+          24.45,
+          26.23
+        ],
+        "bumpstop_thresholds_mm": {
+          "LF": 22.0,
+          "RF": 22.0,
+          "LR": 38.0,
+          "RR": 40.0
+        },
+        "roll_grad_mm_per_g": {
+          "front": 12.613,
+          "rear": 13.295
+        }
+      }
+    },
+    "test2_matches_baseline_chassis": true
+  },
+  "aero_baseline": {
+    "base_cl": 1.177,
+    "base_aero_front_dist": 0.437
+  },
+  "calibration_slots": {
+    "bumpstop_range_mm": {
+      "front_base_mm": 17.0,
+      "front_per_click_mm": 1.0,
+      "rear_base_mm": 24.0,
+      "rear_per_click_mm": 1.0
+    },
+    "arb_stiffness_n_m": {
+      "front_base": 44140.8,
+      "front_per_click": 4798.7,
+      "rear_base": 101005.8,
+      "rear_per_click": 5484.7
+    },
+    "dampers_n_s_m": {
+      "knee_velocity_mps": 0.05,
+      "bump_slow_base": 2865.7,
+      "bump_slow_per_click": 20.9,
+      "bump_fast_base": 1912.5,
+      "bump_fast_per_click": 21.8,
+      "rebound_slow_base": 3456.5,
+      "rebound_slow_per_click": 16.34,
+      "rebound_fast_base": 2054.8,
+      "rebound_fast_per_click": 6.3
+    },
+    "aero_clicks": {
+      "rear_wing_dcl_per_click": 0.0352,
+      "rear_wing_dcd_per_click": 0.0083,
+      "front_splitter_dcl_per_click": 0.0,
+      "front_splitter_df_dist_per_click": 0.0,
+      "front_brake_duct_dcd_per_click": 0.0035,
+      "rear_brake_duct_dcd_per_click": 0.0018
+    }
+  },
+  "units_and_formulas": {
+    "convention": "y(click) = base + per_click * click, where `base` is always the value at click = 0 in the ACC setup UI.",
+    "bumpstop_range_mm": {
+      "unit": "mm (MoTeC SUS_TRAVEL threshold where BUMPSTOPUP_RIDE == 1)",
+      "formula": "threshold_mm(click) = base_mm + per_click_mm * click; dynamic_gap_mm = threshold_mm - static_travel_mm (front 15 mm, rear 17 mm)",
+      "mass_scaling": "independent of m (m^0)"
+    },
+    "arb_stiffness_n_m": {
+      "unit": "N/m at wheel (effective differential axle roll stiffness above wheel rate k_w)",
+      "formula": "K_roll_diff(click) = k_w + base + per_click * click = (2 * m_axle * g * h_cg) / (track_width * |dz / ay_g|)",
+      "mass_scaling": "linear in m (m / m_cal), where m_cal = 1292.5 kg"
+    },
+    "dampers_n_s_m": {
+      "unit": "N*s/m at wheel (vertical velocity threshold knee_velocity_mps = 0.05 m/s)",
+      "formula": "c(click) = base + per_click * click; c_eff = 2 * (ln(z1 / z2) / pi) * sqrt(k_w * m_corner)",
+      "mass_scaling": "sqrt(m / m_cal), where m_cal = 1292.5 kg"
+    },
+    "aero_clicks": {
+      "unit": "dimensionless dCl, dCd referenced to A = 2.08 m^2, rho = 1.225 kg/m^3",
+      "formula": "dFz_aero = q * dCl_per_click * click; dFd_aero = q * (rear_wing_dcd * w + front_duct_dcd * df + rear_duct_dcd * dr)",
+      "mass_scaling": "dCl ~ m^0 (spring stroke); dCd linear in m (m / m_cal)"
+    }
+  },
+  "aero_diagnostics": {
+    "by_session": {
+      "test1": {
+        "cl_front": 0.5145,
+        "cl_rear": 0.663,
+        "cl_total": 1.1775,
+        "aero_front_dist": 0.437
+      },
+      "test2": {
+        "cl_front": 0.4546,
+        "cl_rear": 0.8391,
+        "cl_total": 1.2936,
+        "aero_front_dist": 0.3514
+      },
+      "baseline": {
+        "cl_front": 0.4396,
+        "cl_rear": 0.9124,
+        "cl_total": 1.3521,
+        "aero_front_dist": 0.3252
+      },
+      "test3": {
+        "cl_front": 0.4466,
+        "cl_rear": 0.9205,
+        "cl_total": 1.3671,
+        "aero_front_dist": 0.3267
+      },
+      "test4": {
+        "cl_front": 0.4546,
+        "cl_rear": 0.9181,
+        "cl_total": 1.3728,
+        "aero_front_dist": 0.3312
+      }
+    },
+    "rear_wing_dcl_front_per_click": -0.0154,
+    "rear_wing_dcl_rear_per_click": 0.0506,
+    "rear_duct_dcd_per_click": 0.00175,
+    "front_duct_dcd_per_click": 0.00347
+  }
+}

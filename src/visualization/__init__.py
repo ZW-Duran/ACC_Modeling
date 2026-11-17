@@ -1,6 +1,6 @@
 """Visualization utilities for yaw-dynamics validation and residual diagnostics."""
 
-from sindy_piml.visualization.diagnostics import (
+from src.visualization.diagnostics import (
     plot_race_anomaly_trace,
     plot_residual_distribution,
     plot_yaw_acceleration_fit,

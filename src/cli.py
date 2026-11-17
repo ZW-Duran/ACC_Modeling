@@ -1,4 +1,4 @@
-"""Command-line entry point for the SINDy-PIML vehicle dynamics pipeline."""
+"""Command-line entry point for the ACC_Modeling vehicle dynamics pipeline."""
 
 from __future__ import annotations
 
@@ -8,16 +8,16 @@ import json
 import logging
 from pathlib import Path
 
-from sindy_piml.config import load_config
-from sindy_piml.data.curation import curate_telemetry
-from sindy_piml.data.motec_loader import load_motec_csv
-from sindy_piml.features.planar_force import PlanarForceLibrary
-from sindy_piml.modeling.evaluator import evaluate_model
-from sindy_piml.modeling.trainer import fit_yaw_sindy
-from sindy_piml.stats.anomaly import map_anomalies_to_corners
-from sindy_piml.stats.bootstrap import block_bootstrap_sindy
-from sindy_piml.stats.diagnostics import analyze_residuals
-from sindy_piml.visualization.diagnostics import (
+from src.config import load_config
+from src.data.curation import curate_telemetry
+from src.data.motec_loader import load_motec_csv
+from src.features.planar_force import PlanarForceLibrary
+from src.modeling.evaluator import evaluate_model
+from src.modeling.trainer import fit_yaw_sindy
+from src.stats.anomaly import map_anomalies_to_corners
+from src.stats.bootstrap import block_bootstrap_sindy
+from src.stats.diagnostics import analyze_residuals
+from src.visualization.diagnostics import (
     plot_race_anomaly_trace,
     plot_residual_distribution,
     plot_yaw_acceleration_fit,
@@ -176,7 +176,7 @@ def run_pipeline(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run SINDy-PIML vehicle dynamics identification.")
+    parser = argparse.ArgumentParser(description="Run ACC_Modeling vehicle dynamics identification.")
     parser.add_argument(
         "--config",
         type=Path,

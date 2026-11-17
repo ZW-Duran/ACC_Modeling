@@ -1,11 +1,11 @@
 import numpy as np
 import pandas as pd
 
-from sindy_piml.config import CornerRegion, ModelingConfig
-from sindy_piml.features.planar_force import PlanarForceLibrary
-from sindy_piml.stats.anomaly import map_anomalies_to_corners
-from sindy_piml.stats.bootstrap import block_bootstrap_sindy
-from sindy_piml.stats.diagnostics import analyze_residuals
+from src.config import CornerRegion, ModelingConfig
+from src.features.planar_force import PlanarForceLibrary
+from src.stats.anomaly import map_anomalies_to_corners
+from src.stats.bootstrap import block_bootstrap_sindy
+from src.stats.diagnostics import analyze_residuals
 
 
 def test_residual_diagnostics_gaussian():
