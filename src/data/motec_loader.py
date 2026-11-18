@@ -106,7 +106,41 @@ def load_motec_csv(
     filepath: str | Path,
     channels: Iterable[str] = CORE_CHANNELS,
 ) -> tuple[pd.DataFrame, TelemetryMetadata]:
-    """Load a MoTeC CSV file, extract metadata, select channels, and convert to SI units."""
+    """Load an ACC MoTeC i2 Pro CSV export, parse preamble metadata, and convert channels to SI units.
+
+    Parameters
+    ----------
+    filepath : str | Path
+        Path to the MoTeC CSV telemetry file (expects 18-line MoTeC preamble:
+        lines 0-13 session metadata, line 14 channel names, line 15 units, data from line 18+).
+    channels : Iterable[str], optional
+        Channel names to load if present in the file. Defaults to ``CORE_CHANNELS``.
+        ``Time`` is mandatory.
+
+    Returns
+    -------
+    df : pd.DataFrame
+        Time-sorted telemetry DataFrame (rows with NaNs dropped, index reset) in SI units:
+        - ``Time`` [s]
+        - ``SPEED`` [m/s] (converted from ``km/h``)
+        - ``ROTY`` [rad/s] (converted from ``deg/s``)
+        - ``STEERANGLE`` [rad] (converted from ``deg``)
+        - ``G_LAT``, ``G_LON`` [m/s^2] (multiplied by ``9.80665`` if unit is ``g`` or peak <= 5.0)
+        - ``TYRE_PRESS_*`` [psi], ``THROTTLE``/``BRAKE`` [%], ``SUS_TRAVEL_*`` [mm] (if requested)
+    meta : TelemetryMetadata
+        Parsed session metadata including ``venue``, ``vehicle``, ``sample_rate_hz``,
+        ``duration_s``, ``beacon_markers_s``, and raw header ``units``.
+
+    Notes
+    -----
+    - Sampling rate is read dynamically from the CSV preamble (typically **20 Hz** for Stage 2
+      modeling or **200 Hz** for suspension/damper calibration).
+    - ACC's MoTeC exporter frequently labels ``G_LAT`` / ``G_LON`` as ``"m/s2"`` while writing
+      values in ``g``; this loader detects ``max(|val|) <= 5.0`` and rescales to ``m/s^2``.
+    - ``G_LON`` in ACC MoTeC exports is integer-quantized (``{-2, -1, 0, 1} g``); use
+      ``AX_SPEED`` from :func:`src.data.curation.curate_telemetry` for continuous longitudinal acceleration.
+    - Rows are stably sorted by ``Time`` to guard against out-of-order CSV exports.
+    """
     path = Path(filepath)
     if not path.exists():
         raise FileNotFoundError(f"Telemetry file not found: {path}")

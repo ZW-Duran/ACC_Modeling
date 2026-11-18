@@ -123,7 +123,23 @@ def calibrate_bumpstop_range(
     base_clicks: tuple[int, int] = (5, 14),
     test5_clicks: tuple[int, int] = (2, 10),
 ) -> dict[str, float]:
-    """Solve linear bumpstop engagement range (mm) vs clicks from baseline and test5."""
+    """Solve linear bumpstop engagement range [mm] vs. UI clicks from ``baseline`` and ``test5``.
+
+    Parameters
+    ----------
+    baseline_df : pd.DataFrame
+        200 Hz telemetry DataFrame at baseline bumpstop clicks (e.g. ``[5, 5, 14, 14]``).
+    test5_df : pd.DataFrame
+        200 Hz telemetry DataFrame at reduced bumpstop clicks (e.g. ``[2, 2, 10, 10]``).
+    base_clicks, test5_clicks : tuple[int, int], optional
+        ``(front_click, rear_click)`` UI values for each session.
+
+    Returns
+    -------
+    dict[str, float]
+        ``front_base_mm``, ``front_per_click_mm``, ``rear_base_mm``, ``rear_per_click_mm``
+        using the ``click = 0`` intercept convention. Mass-independent (scales as ``m^0``).
+    """
     f_base_thresh = _bumpstop_threshold_mm(baseline_df, FRONT_CORNERS)
     r_base_thresh = _bumpstop_threshold_mm(baseline_df, REAR_CORNERS)
     f_t5_thresh = _bumpstop_threshold_mm(test5_df, FRONT_CORNERS)
@@ -303,7 +319,34 @@ def calibrate_arb_stiffness(
     kw_f_n_m: float = 153000.0,
     kw_r_n_m: float = 163000.0,
 ) -> dict[str, float]:
-    """Solve differential ARB stiffness (N/m at wheel) from steady-state roll gradients."""
+    """Solve differential ARB stiffness [N/m at wheel] from steady-state cornering roll gradients.
+
+    Parameters
+    ----------
+    calib_dir : str | Path
+        Directory containing 200 Hz calibration CSVs (``baseline``, ``test2``, ``test3``,
+        ``test4``, ``test6`` ``[4,0]``, ``test7`` ``[0,2]``).
+    mass_kg : float
+        Total vehicle test mass [kg] (including 10L Hotlap fuel).
+    front_weight_dist : float, default=0.43
+        Static front axle mass fraction [-].
+    cg_height_m : float, default=0.42
+        Center-of-gravity height [m].
+    track_f_m, track_r_m : float
+        Front and rear track widths [m].
+    kw_f_n_m, kw_r_n_m : float
+        Front and rear spring wheel rates [N/m].
+
+    Returns
+    -------
+    dict[str, float]
+        ``front_base``, ``front_per_click``, ``rear_base``, ``rear_per_click`` [N/m at wheel],
+        referenced to ``click = 0`` in the ACC setup UI. Scales linearly with ``mass_kg``.
+
+    Notes
+    -----
+    Assumes **200 Hz** (``dt = 0.005 s``) telemetry for Savitzky-Golay roll-velocity filtering.
+    """
     cdir = Path(calib_dir)
     dfs = {n: _load_calib_csv(cdir / f"{n}.csv") for n in ("baseline", "test2", "test3", "test4", "test6", "test7")}
 
@@ -446,7 +489,33 @@ def calibrate_mass(
     wheelbase_m: float = 2.70,
     cg_height_m: float = 0.42,
 ) -> dict[str, Any]:
-    """Identify dry chassis mass and fuel tank front/rear distribution from 2L vs. 110L telemetry."""
+    """Identify dry chassis mass [kg] and fuel tank front/rear distribution from ``2L.csv`` vs. ``110L.csv``.
+
+    Parameters
+    ----------
+    calib_dir : str | Path
+        Directory containing 200 Hz ``2L.csv`` and ``110L.csv`` recorded under identical setup.
+    low_fuel_liters, high_fuel_liters : float
+        Fuel loads [L] in the low- and high-fuel sessions (default ``2.0`` and ``110.0``).
+    fuel_density_kg_l : float, default=0.75
+        Racing fuel density [kg/L] (``108 L -> 81.0 kg``).
+    k_f_axle_n_mm, k_r_axle_n_mm : float
+        Total front and rear axle wheel rates [N/mm].
+
+    Returns
+    -------
+    dict[str, Any]
+        Contains ``dry_mass_kg`` [kg], ``low_fuel_mass_kg`` [kg], ``fuel_delta_mass_kg`` [kg],
+        ``fuel_front_weight_dist`` [-], and ``suspension_delta_mm`` [mm].
+
+    Notes
+    -----
+    - Dry mass is identified via the pure 5th-gear WOT straight-line acceleration ratio
+      (``60-67 m/s``): ``m_low = dm_fuel * a_high / (a_low - a_high)``.
+    - Fuel tank front/rear share is identified from speed-matched (``50-72 m/s``)
+      pitch-corrected straight-line suspension compression deltas.
+    - Assumes **200 Hz** (``dt = 0.005 s``) telemetry.
+    """
     cdir = Path(calib_dir)
     low_df = _load_calib_csv(cdir / f"{int(low_fuel_liters)}L.csv")
     high_df = _load_calib_csv(cdir / f"{int(high_fuel_liters)}L.csv")
@@ -523,7 +592,29 @@ def run_gt3_blackbox_calibration(
     hotlap_fuel_liters: float = 10.0,
     fuel_density_kg_l: float = 0.75,
 ) -> dict[str, Any]:
-    """Run the full Audi R8 LMS GT3 Evo II black-box identification pipeline on calibration data."""
+    """Run the full Audi R8 LMS GT3 Evo II black-box identification pipeline on 200 Hz calibration data.
+
+    Parameters
+    ----------
+    calib_dir : str | Path
+        Directory containing ``baseline``, ``test1..test7``, ``test9``, ``test9_out``, and
+        optionally ``2L.csv`` / ``110L.csv`` (all exported at **200 Hz**, ``dt = 0.005 s``).
+    report_path : str | Path | None, optional
+        If provided, writes the full JSON calibration report to this path.
+    dry_mass_kg : float | None, optional
+        Dry chassis mass [kg]. If ``None`` and ``2L.csv`` + ``110L.csv`` exist, automatically
+        identifies ``dry_mass_kg`` via :func:`calibrate_mass`; otherwise defaults to ``1285.0``.
+    hotlap_fuel_liters : float, default=10.0
+        Fuel load [L] locked during ACC Hotlap calibration runs.
+    fuel_density_kg_l : float, default=0.75
+        Fuel density [kg/L].
+
+    Returns
+    -------
+    dict[str, Any]
+        Complete calibration dictionary with ``dry_mass_kg``, ``calibration_mass_kg``,
+        ``aero_baseline``, ``calibration_slots``, ``units_and_formulas``, and diagnostics.
+    """
     cdir = Path(calib_dir)
     mass_cal: dict[str, Any] | None = None
     if dry_mass_kg is None:

@@ -35,7 +35,27 @@ def run_pipeline(
     modeling_path: str | Path | None = None,
     setup_path: str | Path | None = None,
 ) -> dict:
-    """Execute curation, SINDy identification, statistical validation, and stress-testing."""
+    """Execute end-to-end curation, SINDy identification, statistical validation, and verification.
+
+    Parameters
+    ----------
+    config_path : str | Path
+        Path to the experiment YAML manifest (e.g., ``configs/experiments/stage2_planar_force/...``).
+    car_path, track_path, curation_path, modeling_path, setup_path : str | Path | None, optional
+        Optional YAML paths overriding the corresponding entries in ``config_path``.
+
+    Returns
+    -------
+    dict
+        Structured experiment report (also saved to ``outputs/<experiment_name>/report.json``)
+        containing ``equation``, ``clean_metrics``, ``bootstrap``, and (if ``race_csv`` is set)
+        ``race_metrics`` with out-of-sample verification performance and corner anomalies.
+
+    Notes
+    -----
+    - Writes diagnostic plots (``clean_yaw_fit.png``, ``clean_residuals_qq.png``) to
+      ``outputs/<experiment_name>/`` and the fitted model JSON to ``models/<experiment_name>.json``.
+    """
     cfg = load_config(
         config_path,
         car_path=car_path,

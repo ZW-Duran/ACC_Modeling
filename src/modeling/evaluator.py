@@ -31,10 +31,26 @@ def evaluate_model(
     ref_mean: float | None = None,
     ref_std: float | None = None,
 ) -> EvaluationResult:
-    """Evaluate a fitted yaw model on a FeatureMatrix and compute residuals / Z-scores.
+    """Evaluate a fitted yaw model on a FeatureMatrix and compute residuals & standardized Z-scores.
 
-    When evaluating out-of-distribution (e.g., race telemetry), pass `ref_mean` and
-    `ref_std` from the clean practice baseline so Z(t) = (e(t) - mu_0) / sigma_0.
+    Parameters
+    ----------
+    model : FittedYawModel
+        Trained SINDy model from :func:`fit_yaw_sindy`.
+    features : FeatureMatrix
+        Evaluation feature matrix and target array (units: ``rad/s`` for discrete-time
+        ``r_{k+1}`` or ``rad/s^2`` for continuous-time ``r_dot``).
+    ref_mean : float | None, optional
+        Training baseline residual mean ``mu_0``. Pass when evaluating out-of-sample
+        verification/race data so Z-scores are referenced to the training distribution.
+    ref_std : float | None, optional
+        Training baseline residual std ``sigma_0``.
+
+    Returns
+    -------
+    EvaluationResult
+        Contains ``y_true``, ``y_pred``, ``residuals`` (``y_true - y_pred``),
+        ``z_scores``, ``r2``, ``rmse``, ``mae``, ``residual_mean``, and ``residual_std``.
     """
     y_true = features.target
     y_pred = model.predict(features.theta)

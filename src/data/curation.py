@@ -29,7 +29,28 @@ def trim_session(
     mode: Literal["speed_threshold", "first_beacon", "none"] = "speed_threshold",
     speed_threshold_kmh: float = 100.0,
 ) -> pd.DataFrame:
-    """Trim pit-lane exit or formation-lap transients from the start of a session."""
+    """Trim pit-lane exit or formation-lap transients from the start of a session.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        SI telemetry DataFrame from :func:`load_motec_csv` (requires ``Time`` [s] and ``SPEED`` [m/s]).
+    meta : TelemetryMetadata
+        Parsed session metadata containing ``beacon_markers_s``.
+    mode : {"speed_threshold", "first_beacon", "none"}, default="speed_threshold"
+        - ``"speed_threshold"``: drops only the initial rows *before* ``SPEED`` first reaches
+          ``speed_threshold_kmh``; subsequent slow corners (< threshold) are fully preserved.
+        - ``"first_beacon"``: drops rows before ``meta.beacon_markers_s[0]`` (falls back to
+          ``speed_threshold`` if no beacon markers exist).
+        - ``"none"``: returns ``df`` untouched.
+    speed_threshold_kmh : float, default=100.0
+        Pit-exit speed threshold in ``km/h`` (converted internally to ``m/s``).
+
+    Returns
+    -------
+    pd.DataFrame
+        Trimmed DataFrame with reset 0-based index.
+    """
     if mode == "none" or df.empty:
         return df.reset_index(drop=True)
 
@@ -68,7 +89,24 @@ def compute_tire_grip_factor(
     p_opt_psi: float = 27.0,
     sigma_p_psi: float = 1.5,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Compute 4-wheel mean tire pressure P_bar(t) and Gaussian grip factor eta_P(t)."""
+    """Compute 4-wheel mean hot tire pressure and Gaussian tire-grip scaling factor.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Telemetry DataFrame optionally containing ``TYRE_PRESS_LF/RF/LR/RR`` [psi].
+    p_opt_psi : float, default=27.0
+        Target optimal hot tire pressure [psi] (27.0 psi for GT3/GT4 dry slicks in ACC).
+    sigma_p_psi : float, default=1.5
+        Gaussian bandwidth [psi] governing grip drop-off away from ``p_opt_psi``.
+
+    Returns
+    -------
+    p_mean : np.ndarray, shape (N,)
+        4-wheel mean tire pressure [psi] (defaults to ``p_opt_psi`` if columns are absent).
+    eta_p : np.ndarray, shape (N,)
+        Dimensionless grip factor in ``(0, 1]``: ``exp(-(p_mean - p_opt_psi)^2 / (2 * sigma_p_psi^2))``.
+    """
     present = [c for c in TIRE_PRESS_COLS if c in df.columns]
     if not present:
         logger.warning("No TYRE_PRESS_* columns found; defaulting eta_P = 1.0.")
@@ -115,7 +153,38 @@ def curate_telemetry(
     trim_mode: Literal["speed_threshold", "first_beacon", "none"] = "speed_threshold",
     speed_threshold_kmh: float = 100.0,
 ) -> pd.DataFrame:
-    """Apply session trimming, Savitzky-Golay smoothing + r_dot, eta_P, and lap distance."""
+    """Apply session trimming, Savitzky-Golay smoothing/differentiation, grip factor, and lap distance.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Raw SI telemetry DataFrame from :func:`load_motec_csv`.
+    meta : TelemetryMetadata
+        Session metadata (used for beacon-based trimming and lap distance).
+    cfg : CurationConfig
+        Curation settings (``savgol_window``, ``savgol_polyorder``, ``p_opt_psi``, ``sigma_p_psi``).
+    trim_mode : {"speed_threshold", "first_beacon", "none"}, default="speed_threshold"
+        Session start trimming strategy passed to :func:`trim_session`.
+    speed_threshold_kmh : float, default=100.0
+        Pit-exit speed threshold [km/h] when ``trim_mode="speed_threshold"``.
+
+    Returns
+    -------
+    pd.DataFrame
+        Curated DataFrame with smoothed kinematics and added derived channels:
+        - ``R_DOT`` [rad/s^2]: analytical SG first derivative of ``ROTY`` [rad/s].
+        - ``AY_DOT`` [m/s^3]: analytical SG first derivative of ``G_LAT`` [m/s^2].
+        - ``AX_SPEED`` [m/s^2]: analytical SG first derivative of ``SPEED`` [m/s] (dv/dt).
+        - ``P_MEAN_PSI`` [psi] & ``ETA_P`` [-]: 4-wheel mean pressure and grip factor.
+        - ``LAP_INDEX`` [-] & ``LAP_DIST_M`` [m]: lap number and integrated distance along lap.
+
+    Notes
+    -----
+    - ``dt`` is inferred dynamically as ``median(diff(Time))`` [s].
+    - Recommended ``savgol_window`` depends on sampling rate: use **5** (``0.25 s``) for
+      **20 Hz** telemetry and **41** (``0.205 s``) for **200 Hz** telemetry.
+    - All rows after the initial trim point are preserved (zero-phase SG smoothing).
+    """
     out = trim_session(df, meta, mode=trim_mode, speed_threshold_kmh=speed_threshold_kmh)
     if len(out) < cfg.savgol_window:
         raise ValueError(

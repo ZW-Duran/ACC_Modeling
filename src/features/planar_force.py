@@ -38,6 +38,31 @@ class PlanarForceLibrary(CandidateLibrary):
     ]
 
     def build(self, df: pd.DataFrame) -> FeatureMatrix:
+        """Build the discrete-time 6-term candidate library for next-step yaw rate ``r_{k+1}``.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            Curated SI telemetry DataFrame of length ``N >= 3`` containing:
+            - ``ROTY`` [rad/s]
+            - ``G_LAT`` [m/s^2]
+            - ``SPEED`` [m/s]
+            - ``ETA_P`` [-]
+            - ``AX_SPEED`` [m/s^2] (or fallback ``G_LON`` [m/s^2])
+
+        Returns
+        -------
+        FeatureMatrix
+            Design matrix ``theta`` of shape ``(N - 2, 6)`` and target ``r_{k+1}`` of
+            shape ``(N - 2,)`` [rad/s], corresponding to interior indices ``k = 1 .. N-2``.
+
+        Notes
+        -----
+        - **Sampling Rate**: Designed for **20 Hz** (``dt = 0.05 s``) telemetry so
+          ``a_{y,k} - a_{y,k-1}`` captures transient lateral force without 200 Hz staircase ringing.
+        - **Index Alignment**: Because output length is ``N - 2``, align DataFrames with
+          ``df.iloc[1:-1]`` when plotting or mapping residuals back to ``Time`` / ``LAP_DIST_M``.
+        """
         missing = [c for c in self.REQUIRED_COLS if c not in df.columns]
         if missing:
             raise ValueError(f"Missing required columns for PlanarForceLibrary: {missing}")

@@ -54,7 +54,22 @@ class FittedYawModel:
 
 
 def fit_yaw_sindy(features: FeatureMatrix, cfg: ModelingConfig) -> FittedYawModel:
-    """Fit sparse linear-in-parameters ODE r_dot = Theta @ xi using PySINDy STLSQ."""
+    """Fit sparse linear-in-parameters yaw model ``target = Theta @ xi`` using PySINDy STLSQ.
+
+    Parameters
+    ----------
+    features : FeatureMatrix
+        Candidate library ``theta`` (shape ``(M, p)``) and ``target`` (shape ``(M,)``).
+    cfg : ModelingConfig
+        Optimizer hyperparameters: ``stlsq_threshold`` (sparsity cutoff),
+        ``stlsq_alpha`` (Ridge L2 regularization), and ``normalize_columns``.
+
+    Returns
+    -------
+    FittedYawModel
+        Fitted sparse model containing ``coefficients`` (shape ``(p,)``),
+        ``feature_names``, ``latex_names``, ``target_name``, and ``optimizer``.
+    """
     optimizer = ps.STLSQ(
         threshold=cfg.stlsq_threshold,
         alpha=cfg.stlsq_alpha,
