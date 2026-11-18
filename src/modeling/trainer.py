@@ -15,12 +15,13 @@ from src.features.base import FeatureMatrix
 
 @dataclass
 class FittedYawModel:
-    """Container for a fitted sparse yaw-acceleration model."""
+    """Container for a fitted sparse yaw-dynamics model."""
 
     coefficients: np.ndarray
     feature_names: list[str]
     latex_names: list[str]
     optimizer: ps.STLSQ
+    target_name: str = "r_{k+1}"
 
     def predict(self, theta: np.ndarray) -> np.ndarray:
         return theta @ self.coefficients
@@ -34,7 +35,7 @@ class FittedYawModel:
             if abs(coef) > 0.0:
                 terms.append(f"{coef:+.{precision}f} * {name}")
         rhs = " ".join(terms) if terms else "0.0"
-        return f"dr/dt = {rhs}"
+        return f"{self.target_name} = {rhs}"
 
     def to_dict(self) -> dict:
         return {
@@ -67,4 +68,5 @@ def fit_yaw_sindy(features: FeatureMatrix, cfg: ModelingConfig) -> FittedYawMode
         feature_names=features.feature_names,
         latex_names=features.latex_names,
         optimizer=optimizer,
+        target_name=features.target_name,
     )

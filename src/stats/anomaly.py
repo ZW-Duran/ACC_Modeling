@@ -35,6 +35,8 @@ def map_anomalies_to_corners(
     threshold_z: float = 5.0,
 ) -> AnomalySummary:
     """Identify frames with |Z(t)| > threshold_z and map them to track corners."""
+    if len(df) == len(z_scores) + 2:
+        df = df.iloc[1:-1].reset_index(drop=True)
     mask = np.abs(z_scores) > threshold_z
     idx = np.flatnonzero(mask)
 

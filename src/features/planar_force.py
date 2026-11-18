@@ -1,4 +1,4 @@
-"""Stage 2: Whole-Vehicle Planar Force & Bicycle-Model Yaw Dynamics library."""
+"""Stage 2: Discrete-Time Whole-Vehicle Planar Force & Friction-Ellipse Yaw Dynamics library."""
 
 from __future__ import annotations
 
@@ -9,81 +9,73 @@ from src.features.base import CandidateLibrary, FeatureMatrix
 
 
 class PlanarForceLibrary(CandidateLibrary):
-    """Whole-vehicle planar force + 2-DOF bicycle library for [delta, delta_dot, a_y, a_x, v, eta_P] -> r_dot.
+    """Discrete-time planar force library for r_{k+1} = F_A(r_k, a_y_k, a_y_{k-1}, a_x_k, eta_P_k).
 
-    Combines causal steering torque & relaxation lead (delta, delta_dot), linear &
-    speed-dependent yaw damping (r, r/v), lateral-slip velocity proxy ((a_y - v*r)/v),
-    transient lateral force rate (a_y_dot), combined-slip friction-ellipse deficit
-    scaled by tire pressure factor eta_P, and nonlinear front-tire saturation (delta*|delta|).
+    Solves the continuous-time phase-orthogonality issue between r and dr/dt by modeling
+    the 1-step-ahead yaw rate transition r_{k+1} on 20 Hz telemetry (k = 1 .. N-2).
+    Uses AX_SPEED (dv/dt from SPEED) when available, falling back to G_LON.
     """
 
     name = "planar_force"
-    REQUIRED_COLS: tuple[str, ...] = (
-        "STEERANGLE",
-        "STEER_DOT",
-        "ROTY",
-        "G_LAT",
-        "G_LON",
-        "SPEED",
-        "ETA_P",
-        "R_DOT",
-        "AY_DOT",
-    )
+    REQUIRED_COLS: tuple[str, ...] = ("ROTY", "G_LAT", "SPEED", "ETA_P")
 
     FEATURE_NAMES: list[str] = [
-        "delta",
-        "delta_dot",
-        "r",
-        "r/v",
-        "(a_y-v*r)/v",
-        "a_y_dot",
-        "a_y*|a_x|/eta_P^2",
-        "delta*|delta|",
+        "r_k",
+        "a_y_k",
+        "a_y_k-1",
+        "a_y_k*a_x_k",
+        "a_y_k*(a_x_k^2+a_y_k^2)/eta_P_k^2",
+        "r_k*|r_k|",
     ]
 
     LATEX_NAMES: list[str] = [
-        r"\delta",
-        r"\dot{\delta}",
-        r"r",
-        r"\frac{r}{v}",
-        r"\frac{a_y - v r}{v}",
-        r"\dot{a}_y",
-        r"\frac{a_y |a_x|}{\eta_P^2}",
-        r"\delta |\delta|",
+        r"r_k",
+        r"a_{y,k}",
+        r"a_{y,k-1}",
+        r"a_{y,k} a_{x,k}",
+        r"\frac{a_{y,k}(a_{x,k}^2 + a_{y,k}^2)}{\eta_{P,k}^2}",
+        r"r_k |r_k|",
     ]
 
     def build(self, df: pd.DataFrame) -> FeatureMatrix:
         missing = [c for c in self.REQUIRED_COLS if c not in df.columns]
         if missing:
             raise ValueError(f"Missing required columns for PlanarForceLibrary: {missing}")
+        if len(df) < 3:
+            raise ValueError(f"Discrete-time PlanarForceLibrary requires at least 3 rows, got {len(df)}.")
 
-        delta = df["STEERANGLE"].to_numpy(dtype=float)
-        delta_dot = df["STEER_DOT"].to_numpy(dtype=float)
+        ax_col = "AX_SPEED" if "AX_SPEED" in df.columns else "G_LON"
+        if ax_col not in df.columns:
+            raise ValueError("Missing longitudinal acceleration column ('AX_SPEED' or 'G_LON').")
+
         r = df["ROTY"].to_numpy(dtype=float)
+        ax = df[ax_col].to_numpy(dtype=float)
         ay = df["G_LAT"].to_numpy(dtype=float)
-        ax = df["G_LON"].to_numpy(dtype=float)
-        v = np.clip(df["SPEED"].to_numpy(dtype=float), 5.0, None)
         eta_p = np.clip(df["ETA_P"].to_numpy(dtype=float), 1e-3, None)
-        r_dot = df["R_DOT"].to_numpy(dtype=float)
-        ay_dot = df["AY_DOT"].to_numpy(dtype=float)
+
+        # Valid interior indices k = 1 .. N-2 (safe bounds for k-1 and k+1)
+        r_k = r[1:-1]
+        ay_k = ay[1:-1]
+        ay_prev = ay[:-2]
+        ax_k = ax[1:-1]
+        eta_p_k = eta_p[1:-1]
+        r_next = r[2:]
 
         theta = np.column_stack(
             [
-                delta,
-                delta_dot,
-                r,
-                r / v,
-                (ay - v * r) / v,
-                ay_dot,
-                ay * np.abs(ax) / (eta_p**2),
-                delta * np.abs(delta),
+                r_k,
+                ay_k,
+                ay_prev,
+                ay_k * ax_k,
+                ay_k * (ax_k**2 + ay_k**2) / (eta_p_k**2),
+                r_k * np.abs(r_k),
             ]
         )
 
         return FeatureMatrix(
             theta=theta,
-            target=r_dot,
+            target=r_next,
             feature_names=list(self.FEATURE_NAMES),
             latex_names=list(self.LATEX_NAMES),
-            target_name="r_dot",
+            target_name="r_{k+1}",
         )

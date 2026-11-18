@@ -22,45 +22,40 @@ def test_residual_diagnostics_gaussian():
 def test_block_bootstrap_and_anomaly_mapping():
     rng = np.random.default_rng(7)
     n = 600
-    delta = rng.normal(0.0, 0.1, size=n)
     r = rng.normal(0.0, 0.3, size=n)
-    ay = rng.normal(0.0, 6.0, size=n)
     ax = rng.normal(0.0, 4.0, size=n)
+    ay = rng.normal(0.0, 6.0, size=n)
     eta_p = np.ones(n)
-    r_dot = 1.2 * delta - 0.5 * r + rng.normal(0.0, 0.02, size=n)
+    for k in range(1, n - 1):
+        r[k + 1] = 0.95 * r[k] + 0.01 * ay[k] + rng.normal(0.0, 0.005)
 
     df = pd.DataFrame(
         {
-            "Time": np.arange(n) * 0.005,
+            "Time": np.arange(n) * 0.05,
             "LAP_INDEX": np.ones(n, dtype=int),
             "LAP_DIST_M": np.linspace(400.0, 1200.0, n),
             "SPEED": rng.uniform(20.0, 60.0, size=n),
-            "STEERANGLE": delta,
-            "STEER_DOT": rng.normal(0.0, 0.3, size=n),
             "ROTY": r,
+            "AX_SPEED": ax,
             "G_LAT": ay,
-            "G_LON": ax,
-            "AY_DOT": rng.normal(0.0, 5.0, size=n),
             "ETA_P": eta_p,
-            "R_DOT": r_dot,
         }
     )
 
     feats = PlanarForceLibrary().build(df)
-    coef = np.array([1.2, 0.0, -0.5, 0.0, 0.0, 0.0, 0.0, 0.0])
+    coef = np.array([0.95, 0.01, 0.0, 0.0, 0.0, 0.0])
     boot = block_bootstrap_sindy(
         feats,
         coef,
-        ModelingConfig(stlsq_threshold=0.01, stlsq_alpha=0.0, normalize_columns=True),
+        ModelingConfig(stlsq_threshold=0.002, stlsq_alpha=0.0, normalize_columns=True),
         block_size=50,
         n_resamples=30,
         seed=7,
     )
-    assert len(boot.terms) == 8
-    assert boot.terms[0].ci_95_low < 1.25 and boot.terms[0].ci_95_high > 1.15
-    assert boot.terms[2].ci_95_low < -0.45 and boot.terms[2].ci_95_high > -0.55
+    assert len(boot.terms) == 6
+    assert boot.terms[0].ci_95_low < 0.98 and boot.terms[0].ci_95_high > 0.92
 
-    z = np.zeros(n)
+    z = np.zeros(n - 2)
     z[10] = 6.2
     z[500] = -5.5
     corners = [

@@ -145,6 +145,13 @@ def curate_telemetry(
         deriv=1,
         delta=dt,
     )
+    out["AX_SPEED"] = savgol_filter(
+        out["SPEED"].to_numpy(dtype=float),
+        window_length=cfg.savgol_window,
+        polyorder=cfg.savgol_polyorder,
+        deriv=1,
+        delta=dt,
+    )
     if "STEERANGLE" in out.columns:
         out["STEER_DOT"] = savgol_filter(
             out["STEERANGLE"].to_numpy(dtype=float),

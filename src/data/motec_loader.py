@@ -125,6 +125,7 @@ def load_motec_csv(
         usecols=present_cols,
         low_memory=False,
     )
-    df = df.apply(pd.to_numeric, errors="coerce").dropna().reset_index(drop=True)
+    df = df.apply(pd.to_numeric, errors="coerce").dropna()
+    df = df.sort_values("Time", kind="mergesort").reset_index(drop=True)
     df = _convert_to_si(df, meta.units)
     return df, meta

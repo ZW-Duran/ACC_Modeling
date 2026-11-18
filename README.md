@@ -1,6 +1,6 @@
 # ACC_Modeling: Multi-Stage Vehicle Dynamics Modeling & Telemetry Calibration
 
-Physics-informed vehicle dynamics modeling, black-box setup calibration, and benchmark identification from high-resolution **200 Hz Assetto Corsa Competizione (ACC) MoTeC telemetry**.
+Physics-informed vehicle dynamics modeling, black-box setup calibration, and benchmark identification from **Assetto Corsa Competizione (ACC) MoTeC telemetry** (**20 Hz** for whole-car planar-force modeling; **200 Hz** for suspension/damper black-box calibration).
 
 ---
 
@@ -12,10 +12,11 @@ This project systematically climbs the vehicle-dynamics modeling hierarchy—usi
 - **Approach**: Initial prototypes regressed coupled vehicle states (`SPEED`, `G_LAT`, `G_LON`, `ROTY`) directly against raw driver inputs (`STEERANGLE`, `THROTTLE`, `BRAKE`) using generic polynomials.
 - **Why Deprecated**: Driver control inputs decouple from chassis response whenever tires saturate (mid-corner understeer, counter-steering, TC/ABS interventions, dirty air, and traffic in race stints), creating severe non-stationary variance and unphysical terms.
 
-### Stage 2 — Whole-Vehicle Planar Force SINDy *(Completed Benchmark)*
-- **Physical Rationale**: Shift to an outcome-driven, force-state formulation ($[a_y, a_x, v, \eta_P] \to \dot{r}$) identified via **PySINDy (`STLSQ`)**. Longitudinal acceleration $a_x$ implicitly captures longitudinal pitch and front/rear load transfer; lateral acceleration $a_y$ and lateral jerk $\dot{a}_y$ capture lateral roll, transient tire-force buildup, and cornering curvature; and four-wheel mean hot pressure $\bar{P}(t)$ enters through a Gaussian tire grip factor $\eta_P(t)$:
-  $$\dot{r} = f\left(r,\; a_y,\; \dot{a}_y,\; \frac{\dot{a}_y}{v},\; (a_y - v r),\; a_y|a_x|,\; \frac{a_y(a_x^2 + a_y^2)}{\eta_P^2},\; r|r|\right)$$
-- **Finding & Benchmark Role**: Widening the Savitzky-Golay filter (`window=81`, $0.405\text{ s}$) and introducing transient lateral force terms lifted clean-lap $R^2$ from `~0.05` to `0.4086` (GT3) and `0.5251` (GT4). However, whole-car lumped SINDy treats the four tires as a single rigid body—leaving curb strikes, asymmetric wheel unloading, and suspension bottoming unresolved. Stage 2 now serves as our **baseline benchmark** for evaluating Stages 3 and 4.
+### Stage 2 — Whole-Vehicle Discrete-Time Planar Force SINDy *(Completed Benchmark)*
+- **Telemetry Sampling Policy**: `training_Barcelona_GT3.csv` and `verification_Barcelona_GT3.csv` are exported at **20 Hz** (`dt = 0.05 s`, `savgol_window=5`), matching the native 20 Hz update rate of ACC's `ROTY` and `G_LAT` channels and eliminating zero-order-hold differentiation ringing. Meanwhile, `data/calibration/` retains **200 Hz** exports for high-frequency suspension/damper velocity calibration.
+- **Physical Rationale**: Because ACC's `G_LON` channel is integer-quantized (`{-2, -1, 0, 1} g`), longitudinal acceleration $a_x \approx \dot{v}$ is computed directly by differentiating `SPEED` (`m/s`). To resolve the $90^\circ$ phase-orthogonality between $r$ and $\dot{r}$, Stage 2 models the discrete-time state transition $r_{k+1} = F_A(\dots)$ via **PySINDy (`STLSQ`)**:
+  $$r_{k+1} = F_A\left(r_k,\; a_{y,k},\; a_{y,k-1},\; a_{y,k} a_{x,k},\; \frac{a_{y,k}(a_{x,k}^2 + a_{y,k}^2)}{\eta_{P,k}^2},\; r_k|r_k|\right)$$
+- **Finding & Benchmark Role**: On Audi R8 LMS GT3 Evo II (`Barcelona R8_A`), the discrete-time formulation achieves **$R^2 = 0.9865$** (`RMSE = 0.0393 rad/s`) on full-lap training and **$R^2 = 0.9829$** (`RMSE = 0.0454 rad/s`) on out-of-sample verification, with consistent `0.97–0.99` $R^2$ across individual corners (`T3`, `T4`, `T5`, `T13–T15`). Stage 2 serves as our **baseline benchmark** for evaluating physics-based Stages 3 and 4.
 
 ### Stage 3 — Single-Wheel & Suspension Contact-Patch Modeling *(Next Focus — Standard Physics / Nonlinear Modeling)*
 - **Modeling Choice**: Rather than forcing SINDy sparse polynomials, Stage 3 applies **standard first-principles and nonlinear vehicle-dynamics modeling** (e.g., Pacejka/brush tire-force curves, nonlinear least squares, and per-corner vertical/lateral force balance) directly benchmarked against Stage 2 SINDy.
@@ -57,11 +58,8 @@ Controlled mid-engine V10 SINDy benchmark between **Audi R8 LMS GT3 Evo II** (hi
 ![GT3 Residual Distribution & Q-Q](outputs/stage2_barcelona_gt3_r8_A/clean_residuals_qq.png)
 ![GT3 Race Anomaly Trace](outputs/stage2_barcelona_gt3_r8_A/race_anomaly_trace.png)
 
-#### Audi R8 LMS GT4
-![GT4 Yaw Acceleration Fit](outputs/stage2_barcelona_gt4_a1/clean_yaw_fit.png)
-![GT4 Residual Distribution & Q-Q](outputs/stage2_barcelona_gt4_a1/clean_residuals_qq.png)
-![GT4 Race Anomaly Trace](outputs/stage2_barcelona_gt4_a1/race_anomaly_trace.png)
-
+#### Audi R8 LMS GT4 (Mechanical-Grip Baseline)
+> **Status:** `Pending Re-calibration` — *Currently migrating from the legacy 200 Hz continuous-derivative pipeline to the updated 20 Hz discrete-time formulation to match native ACC yaw-rate update frequencies.*
 ---
 
 ## Repository Structure
@@ -92,12 +90,9 @@ ACC_Modeling/
 ├── models/                       # Exported Stage 2 sparse ODE models (.json)
 ├── outputs/
 │   ├── calibration/                                # Black-box identification reports (.json)
-│   ├── stage2_barcelona_gt3_r8_A/                  # GT3 Stage 2 practice vs. race diagnostic plots & report
-│   ├── stage2_barcelona_gt4_a1/                    # GT4 Stage 2 practice vs. race diagnostic plots & report
-│   └── stage2final_barcelona_gt3_r8_A_hotlap_10l/  # Stage 2 Final (10L GT3 Hotlap) SINDy benchmark plots & report
+│   └── stage2_barcelona_gt3_r8_A/                  # GT3 Stage 2 full-lap & corner diagnostic plots & report
 ├── notebooks/
-│   ├── stage2_showcase.ipynb                       # Stage 2 GT3 vs. GT4 practice & race stress-test showcase
-│   └── stage2_final_gt3_hotlap.ipynb               # Stage 2 Final (10L GT3 Hotlap) SINDy benchmark for Stage 3/4 comparison
+│   └── stage2_gt3_discrete_sindy.ipynb             # Consolidated GT3 Stage 2 discrete-time SINDy modeling (full lap + T3/T4/T5/T13-15)
 ├── src/
 │   ├── cli.py                    # Modular CLI entry point (`acc-modeling`)
 │   ├── config.py                 # Composable YAML loader (Car, Setup, Track, Curation, Modeling)

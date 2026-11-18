@@ -19,18 +19,20 @@ def plot_yaw_acceleration_fit(
     eval_res: EvaluationResult,
     title: str,
     save_path: str | Path,
-    window_seconds: float = 30.0,
+    window_seconds: float | None = None,
 ) -> Path:
-    """Plot observed vs. SINDy-predicted yaw acceleration over a representative window."""
+    """Plot observed vs. SINDy-predicted yaw dynamics over the full session or a specified window."""
+    if len(df) == len(eval_res.y_true) + 2:
+        df = df.iloc[1:-1].reset_index(drop=True)
     t = df["Time"].to_numpy(dtype=float)
     t_rel = t - t[0]
-    mask = t_rel <= window_seconds
+    mask = np.ones(len(t_rel), dtype=bool) if window_seconds is None else (t_rel <= window_seconds)
 
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(13, 7), sharex=True)
 
-    ax1.plot(t_rel[mask], eval_res.y_true[mask], "k-", lw=1.4, label=r"Observed $\dot{r}_{\mathrm{obs}}$")
-    ax1.plot(t_rel[mask], eval_res.y_pred[mask], "r--", lw=1.2, alpha=0.9, label=r"SINDy $\dot{r}_{\mathrm{pred}}$")
-    ax1.set_ylabel(r"Yaw Accel $\dot{r}$ ($\mathrm{rad/s^2}$)")
+    ax1.plot(t_rel[mask], eval_res.y_true[mask], "k-", lw=1.4, label=r"Observed $r_{k+1,\mathrm{obs}}$")
+    ax1.plot(t_rel[mask], eval_res.y_pred[mask], "r--", lw=1.2, alpha=0.9, label=r"SINDy $r_{k+1,\mathrm{pred}}$")
+    ax1.set_ylabel(r"Next-Step Yaw Rate $r_{k+1}$ ($\mathrm{rad/s}$)")
     ax1.set_title(f"{title} | $R^2={eval_res.r2:.4f}$, RMSE={eval_res.rmse:.4f}")
     ax1.grid(True, ls=":", alpha=0.6)
     ax1.legend(loc="upper right")
@@ -38,7 +40,7 @@ def plot_yaw_acceleration_fit(
     ax2.plot(t_rel[mask], eval_res.residuals[mask], color="#1f77b4", lw=1.0, label="Residual $e(t)$")
     ax2.axhline(0.0, color="k", lw=0.8, ls="--")
     ax2.set_xlabel("Elapsed Time (s)")
-    ax2.set_ylabel(r"Residual ($\mathrm{rad/s^2}$)")
+    ax2.set_ylabel(r"Residual ($\mathrm{rad/s}$)")
     ax2.grid(True, ls=":", alpha=0.6)
     ax2.legend(loc="upper right")
 
@@ -55,31 +57,56 @@ def plot_residual_distribution(
     title: str,
     save_path: str | Path,
 ) -> Path:
-    """Plot residual histogram with Gaussian overlay alongside a normal Q-Q plot."""
+    """Plot empirical residual count histogram with non-parametric KDE, Laplace, and Student-t fits."""
     res = eval_res.residuals
+    n = len(res)
     mu, sigma = eval_res.residual_mean, max(eval_res.residual_std, 1e-12)
 
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(13, 5))
 
-    ax1.hist(res, bins=100, density=True, alpha=0.65, color="#2b6cb0", label="Empirical Residuals")
-    x_grid = np.linspace(mu - 6 * sigma, mu + 6 * sigma, 400)
-    ax1.plot(x_grid, stats.norm.pdf(x_grid, mu, sigma), "r-", lw=1.8, label=r"$\mathcal{N}(\mu_0, \sigma_0^2)$")
-    ax1.axvline(mu + 5 * sigma, color="darkred", ls="--", lw=1.2, label=r"$\pm 5\sigma_0$")
-    ax1.axvline(mu - 5 * sigma, color="darkred", ls="--", lw=1.2)
-    ax1.set_yscale("log")
-    ax1.set_ylim(1e-6, None)
-    ax1.set_title(f"{title} — Residual Distribution (Log Scale)")
-    ax1.set_xlabel(r"Residual $e(t)$ ($\mathrm{rad/s^2}$)")
-    ax1.set_ylabel("Density")
+    counts, bin_edges, _ = ax1.hist(
+        res, bins=80, alpha=0.65, color="#2b6cb0", edgecolor="white", linewidth=0.4, label="Empirical Count"
+    )
+    bin_width = float(bin_edges[1] - bin_edges[0])
+    scale_to_count = n * bin_width
+
+    x_grid = np.linspace(float(bin_edges[0]), float(bin_edges[-1]), 400)
+
+    # Fit non-Gaussian heavy-tailed distributions & non-parametric KDE directly
+    loc_l, scale_l = stats.laplace.fit(res)
+    df_t, loc_t, scale_t = stats.t.fit(res)
+    kde = stats.gaussian_kde(res)
+
+    ax1.plot(x_grid, kde(x_grid) * scale_to_count, "k-", lw=1.8, label="Empirical KDE")
+    ax1.plot(
+        x_grid,
+        stats.laplace.pdf(x_grid, loc=loc_l, scale=scale_l) * scale_to_count,
+        "r--",
+        lw=1.8,
+        label=rf"Laplace Fit ($b={scale_l:.4f}$)",
+    )
+    ax1.plot(
+        x_grid,
+        stats.t.pdf(x_grid, df=df_t, loc=loc_t, scale=scale_t) * scale_to_count,
+        color="#d97706",
+        ls="-.",
+        lw=1.6,
+        label=rf"Student-$t$ Fit ($\nu={df_t:.2f}$)",
+    )
+    ax1.axvline(mu + 5 * sigma, color="darkred", ls=":", lw=1.1, label=r"$\pm 5\sigma$")
+    ax1.axvline(mu - 5 * sigma, color="darkred", ls=":", lw=1.1)
+    ax1.set_title(f"{title} — Residual Count & Fitted Distributions")
+    ax1.set_xlabel(r"Residual $e(t)$ ($\mathrm{rad/s}$)")
+    ax1.set_ylabel("Count (Samples)")
     ax1.grid(True, ls=":", alpha=0.5)
     ax1.legend()
 
-    standardized = (res - mu) / sigma
-    if len(standardized) > 10000:
+    sample = res
+    if len(sample) > 10000:
         rng = np.random.default_rng(42)
-        standardized = rng.choice(standardized, size=10000, replace=False)
-    stats.probplot(standardized, dist="norm", plot=ax2)
-    ax2.set_title("Normal Q-Q Plot")
+        sample = rng.choice(sample, size=10000, replace=False)
+    stats.probplot(sample, dist=stats.laplace, sparams=(loc_l, scale_l), plot=ax2)
+    ax2.set_title(rf"Laplace Q-Q Plot ($b={scale_l:.4f}$)")
     ax2.grid(True, ls=":", alpha=0.5)
 
     out = Path(save_path)
@@ -97,7 +124,9 @@ def plot_race_anomaly_trace(
     title: str,
     save_path: str | Path,
 ) -> Path:
-    """Plot standardized residual Z-score trace during race stress-testing."""
+    """Plot standardized residual Z-score trace during verification / stress-testing."""
+    if len(df) == len(z_scores) + 2:
+        df = df.iloc[1:-1].reset_index(drop=True)
     t_rel = df["Time"].to_numpy(dtype=float) - float(df["Time"].iloc[0])
 
     fig, ax = plt.subplots(figsize=(14, 4.5))

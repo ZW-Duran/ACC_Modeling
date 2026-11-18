@@ -13,43 +13,39 @@ from src.modeling.trainer import fit_yaw_sindy
 def test_planar_force_library_recovers_synthetic_ode():
     rng = np.random.default_rng(123)
     n = 3000
-    delta = rng.uniform(-0.3, 0.3, size=n)
-    delta_dot = rng.uniform(-1.0, 1.0, size=n)
     r = rng.uniform(-0.8, 0.8, size=n)
-    ay = rng.uniform(-15.0, 15.0, size=n)
     ax = rng.uniform(-12.0, 12.0, size=n)
+    ay = rng.uniform(-15.0, 15.0, size=n)
     v = rng.uniform(20.0, 70.0, size=n)
-    ay_dot = rng.uniform(-30.0, 30.0, size=n)
     eta_p = rng.uniform(0.7, 1.0, size=n)
 
-    r_dot = 1.4 * delta - 0.8 * r + 0.015 * ay_dot - 0.02 * ay * np.abs(ax) / (eta_p**2)
+    # Plant synthetic discrete-time transition r_{k+1} = 0.95*r_k + 0.01*a_y_k - 0.008*a_y_{k-1} - 0.05*r_k*|r_k|
+    r_synth = r.copy()
+    for k in range(1, n - 1):
+        r_synth[k + 1] = 0.95 * r_synth[k] + 0.01 * ay[k] - 0.008 * ay[k - 1] - 0.05 * r_synth[k] * abs(r_synth[k])
 
     df = pd.DataFrame(
         {
-            "STEERANGLE": delta,
-            "STEER_DOT": delta_dot,
-            "ROTY": r,
+            "ROTY": r_synth,
+            "AX_SPEED": ax,
             "G_LAT": ay,
-            "G_LON": ax,
             "SPEED": v,
-            "AY_DOT": ay_dot,
             "ETA_P": eta_p,
-            "R_DOT": r_dot,
         }
     )
 
     lib = PlanarForceLibrary()
     feats = lib.build(df)
-    assert feats.theta.shape == (n, 8)
+    assert feats.theta.shape == (n - 2, 6)
 
-    model = fit_yaw_sindy(feats, ModelingConfig(stlsq_threshold=0.005, stlsq_alpha=0.0, normalize_columns=True))
+    model = fit_yaw_sindy(feats, ModelingConfig(stlsq_threshold=0.002, stlsq_alpha=0.0, normalize_columns=True))
     res = evaluate_model(model, feats)
 
     assert res.r2 > 0.9999
-    assert np.isclose(model.coefficients[0], 1.4, atol=1e-3)
-    assert np.isclose(model.coefficients[2], -0.8, atol=1e-3)
-    assert np.isclose(model.coefficients[5], 0.015, atol=1e-3)
-    assert np.isclose(model.coefficients[6], -0.02, atol=1e-3)
+    assert np.isclose(model.coefficients[0], 0.95, atol=1e-3)
+    assert np.isclose(model.coefficients[1], 0.01, atol=1e-3)
+    assert np.isclose(model.coefficients[2], -0.008, atol=1e-3)
+    assert np.isclose(model.coefficients[5], -0.05, atol=1e-3)
 
 
 def test_modular_config_loading():
@@ -61,7 +57,7 @@ def test_modular_config_loading():
     assert np.isclose(gt3.car.wheelbase_m, 2.70)
     assert gt3.car.aero_baseline.reference_area_m2 == 2.08
     assert np.isclose(gt3.car.aero_baseline.base_cl, 1.177, atol=1e-3)
-    assert np.isclose(gt3.car.aero_baseline.base_aero_front_dist, 0.437, atol=1e-3)
+    assert np.isclose(gt3.car.aero_baseline.base_aero_front_dist, 0.424, atol=1e-3)
     assert gt3.car.calibration_slots["bumpstop_range_mm"]["front_base_mm"] == 17.0
     assert gt3.car.calibration_slots["bumpstop_range_mm"]["front_per_click_mm"] == 1.0
     assert gt3.car.calibration_slots["dampers_n_s_m"]["knee_velocity_mps"] == 0.05
@@ -77,7 +73,7 @@ def test_modular_config_loading():
     assert gt3.setup["suspension"]["arb_clicks"] == [4, 2]
     assert gt3.track.track_id == "barcelona_catalunya"
     assert len(gt3.track.corners) == 8
-    assert gt3.curation.savgol_window == 41
+    assert gt3.curation.savgol_window == 5
     assert gt3.modeling.formulation == "planar_force"
 
     gt4 = load_config(repo_root / "configs/experiments/stage2_planar_force/barcelona__audi_r8_gt4__a1.yaml")

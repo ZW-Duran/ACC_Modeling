@@ -8,11 +8,12 @@ from src.calibration.blackbox import (
     calibrate_arb_stiffness,
     calibrate_bumpstop_range,
     calibrate_dampers,
+    calibrate_mass,
     run_gt3_blackbox_calibration,
     verify_setup_consistency,
 )
 
-CALIB_DIR = Path(__file__).resolve().parents[1] / "data/calibration"
+CALIB_DIR = Path(__file__).resolve().parents[1] / "data/calibration/audi_r8_gt3_evo2"
 
 
 @pytest.mark.skipif(not CALIB_DIR.exists(), reason="Local telemetry calibration directory not present.")
@@ -23,7 +24,7 @@ def test_setup_consistency_and_test2_match():
     assert res["sessions"]["test2"]["vmax_kmh"] > res["sessions"]["baseline"]["vmax_kmh"]
 
     rep = run_gt3_blackbox_calibration(CALIB_DIR)
-    assert rep["calibration_mass_kg"] == 1292.5
+    assert rep["calibration_mass_kg"] == 1168.7
     assert rep["hotlap_fuel_liters"] == 10.0
     assert rep["stationary_datum_mm"] == {"front": 15.0, "rear": 17.0}
 
@@ -70,3 +71,11 @@ def test_arb_and_damper_calibration():
         "rebound_fast_per_click",
     ):
         assert damp[key] > 0, f"Expected positive physical value for {key}, got {damp[key]}"
+
+
+@pytest.mark.skipif(not CALIB_DIR.exists(), reason="Local telemetry calibration directory not present.")
+def test_mass_calibration():
+    mass_info = calibrate_mass(CALIB_DIR)
+    assert 1050.0 < mass_info["dry_mass_kg"] < 1350.0
+    assert mass_info["fuel_delta_mass_kg"] == 81.0
+    assert 0.20 < mass_info["fuel_front_weight_dist"] < 0.40

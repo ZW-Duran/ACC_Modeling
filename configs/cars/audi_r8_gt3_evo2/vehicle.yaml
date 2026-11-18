@@ -5,7 +5,7 @@ drivetrain: "RWD"
 layout: "Mid-Engine V10"
 # 1. Immutable Rigid-Body & Geometry Constants
 chassis:
-  mass_kg: 1285.0 # Dry chassis mass without fuel
+  mass_kg: 1161.2 # Dry chassis mass identified via 2L vs 110L WOT ratio (fuel front share ~29.3%)
   front_weight_dist: 0.43
   wheelbase_m: 2.70 # FIA GT3 homologated wheelbase (2700 mm)
   track_width_front_m: 1.67
@@ -20,12 +20,12 @@ aero_baseline:
   reference_area_m2: 2.08
   base_cl: 1.177              # [-] Total zero-wing downforce coeff (test1 wing=0 WOT Fz/q; Fz = Cl * 0.5 * rho * A * v^2)
   base_cd: 0.38               # [-] Nominal baseline drag coeff (used with click deltas below)
-  base_aero_front_dist: 0.437 # [-] Front aero share Cl_front / Cl_total at zero wing (test1 wing=0)
+  base_aero_front_dist: 0.424 # [-] Front aero share Cl_front / Cl_total at zero wing (test1 wing=0)
 
 # 3. Black-Box Click-to-Physical Calibration Slots
 # Convention: y(click) = base + per_click * click, where `base` is ALWAYS defined at click = 0
 # in the ACC setup UI (NOT at the R8_A baseline clicks).
-# Calibration reference mass: m_cal = 1292.5 kg (dry 1285 kg + 10 L Hotlap fuel @ 0.75 kg/L).
+# Calibration reference mass: m_cal = 1168.7 kg (dry 1161.2 kg + 10 L Hotlap fuel @ 0.75 kg/L).
 calibration_slots:
   # Unit: [mm] of MoTeC SUS_TRAVEL where compression stop engages (BUMPSTOPUP_RIDE == 1).
   # Dynamic free bumpstop travel = threshold_mm(click) - static_travel_mm (15 mm front, 17 mm rear).
@@ -38,34 +38,34 @@ calibration_slots:
 
   # Unit: [N/m] effective wheel-referenced differential roll stiffness above spring wheel_rate k_w.
   # Formula: K_roll_diff(click) = k_w + base + per_click * click = (2 * m_axle * g * h_cg) / (track_width * |dz / ay_g|).
-  # Mass scaling: scales linearly as (m_true / 1292.5).
+  # Mass scaling: scales linearly as (m_true / 1168.7).
   # base is directly measured at UI click=0 (front via test7 [0,2], rear via test6 [4,0]).
   arb_stiffness_n_m:
-    front_base: 44140.8
-    front_per_click: 4798.7
-    rear_base: 101005.8
-    rear_per_click: 5484.7
+    front_base: 25258.0
+    front_per_click: 4339.1
+    rear_base: 75718.4
+    rear_per_click: 4959.3
 
   # Unit: [N*s/m] wheel-referenced damping coefficient c(click) = base + per_click * click.
   # Formula: c_eff = 2 * zeta * sqrt(k_w * m_corner), zeta = ln(z1 / z2) / pi from >1.2 Hz half-cycle ringdown.
-  # Mass scaling: scales as sqrt(m_true / 1292.5). Extrapolated to click=0 from baseline vs test9+test9_out (click=5).
+  # Mass scaling: scales as sqrt(m_true / 1168.7). Extrapolated to click=0 from baseline vs test9+test9_out (click=5).
   dampers_n_s_m:
     knee_velocity_mps: 0.05
-    bump_slow_base: 2865.7
-    bump_slow_per_click: 20.9
-    bump_fast_base: 1912.5
-    bump_fast_per_click: 21.8
-    rebound_slow_base: 3456.5
-    rebound_slow_per_click: 16.34
-    rebound_fast_base: 2054.8
-    rebound_fast_per_click: 6.3
+    bump_slow_base: 2725.0
+    bump_slow_per_click: 19.88
+    bump_fast_base: 1818.6
+    bump_fast_per_click: 20.73
+    rebound_slow_base: 3286.8
+    rebound_slow_per_click: 15.54
+    rebound_fast_base: 1953.9
+    rebound_fast_per_click: 5.99
 
   # Unit: [dimensionless] aerodynamic coefficient deltas per click (dFz = q * dCl, dFd = q * dCd).
-  # dCl identified from spring-stroke force (m^0); dCd from -m * delta_ax(v) / q (scales as m_true / 1292.5).
+  # dCl identified from spring-stroke force (m^0); dCd from -m * delta_ax(v) / q (scales as m_true / 1168.7).
   aero_clicks:
     rear_wing_dcl_per_click: 0.0352        # [-] Linear slope across wing = 0, 3, 5 (test1, test2, baseline)
-    rear_wing_dcd_per_click: 0.0083        # [-] Linear drag slope across wing = 0, 3, 5
+    rear_wing_dcd_per_click: 0.0073        # [-] Linear drag slope across wing = 0, 3, 5
     front_splitter_dcl_per_click: 0.0      # [-] BoP-locked on Audi R8 LMS GT3 Evo II
     front_splitter_df_dist_per_click: 0.0  # [-] BoP-locked on Audi R8 LMS GT3 Evo II
-    front_brake_duct_dcd_per_click: 0.0035 # [-] Front duct drag delta-Cd/click (test4 ducts [2,6] vs baseline [2,3])
-    rear_brake_duct_dcd_per_click: 0.0018  # [-] Rear duct drag delta-Cd/click (test3 ducts [6,3] vs baseline [2,3])
+    front_brake_duct_dcd_per_click: 0.0030 # [-] Front duct drag delta-Cd/click (test4 ducts [2,6] vs baseline [2,3])
+    rear_brake_duct_dcd_per_click: 0.0017  # [-] Rear duct drag delta-Cd/click (test3 ducts [6,3] vs baseline [2,3])

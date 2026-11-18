@@ -436,16 +436,104 @@ def _stationary_travel_datum_mm(calib_dir: Path) -> tuple[float, float]:
     return z0_f, z0_r
 
 
+def calibrate_mass(
+    calib_dir: str | Path,
+    low_fuel_liters: float = 2.0,
+    high_fuel_liters: float = 110.0,
+    fuel_density_kg_l: float = 0.75,
+    k_f_axle_n_mm: float = 306.0,
+    k_r_axle_n_mm: float = 326.0,
+    wheelbase_m: float = 2.70,
+    cg_height_m: float = 0.42,
+) -> dict[str, Any]:
+    """Identify dry chassis mass and fuel tank front/rear distribution from 2L vs. 110L telemetry."""
+    cdir = Path(calib_dir)
+    low_df = _load_calib_csv(cdir / f"{int(low_fuel_liters)}L.csv")
+    high_df = _load_calib_csv(cdir / f"{int(high_fuel_liters)}L.csv")
+
+    dm_fuel_kg = (high_fuel_liters - low_fuel_liters) * fuel_density_kg_l
+
+    # 1. Pure 5th-gear WOT straight-line acceleration ratio: m_low * a_low = m_high * a_high
+    ax_bins = np.linspace(60.0, 67.0, 8)
+    v_low, a_low = _wot_ax_curve(low_df, ax_bins)
+    v_high, a_high = _wot_ax_curve(high_df, ax_bins)
+    common = np.intersect1d(v_low, v_high)
+    idx_l = np.isin(v_low, common)
+    idx_h = np.isin(v_high, common)
+    diff = a_low[idx_l] - a_high[idx_h]
+    valid_ax = np.abs(diff) > 1e-4
+    if not np.any(valid_ax):
+        raise ValueError("Insufficient WOT acceleration separation between low and high fuel runs.")
+    m_low_bins = dm_fuel_kg * a_high[idx_h][valid_ax] / diff[valid_ax]
+    m_low_kg = float(np.median(m_low_bins))
+    dry_mass_kg = m_low_kg - low_fuel_liters * fuel_density_kg_l
+
+    # 2. Speed-matched straight-line suspension compression for fuel cell F/R distribution
+    z_bins = np.linspace(50.0, 72.0, 12)
+    z_medians: dict[str, tuple[np.ndarray, np.ndarray]] = {}
+    for label, df in (("low", low_df), ("high", high_df)):
+        v = df["SPEED"].to_numpy(dtype=float)
+        ax = savgol_filter(v, 51, 3, deriv=1, delta=0.005)
+        ay_g = df["G_LAT"].to_numpy(dtype=float) / GRAVITY
+        no_bs = np.ones(len(df), dtype=bool)
+        for c in CORNERS:
+            no_bs &= df[f"BUMPSTOPUP_RIDE_{c}"].to_numpy() == 0
+        mask = (v > 50.0) & (np.abs(ay_g) < 0.15) & (df["THROTTLE"].to_numpy() == 100) & no_bs
+        f_tr = 0.5 * (df["SUS_TRAVEL_LF"] + df["SUS_TRAVEL_RF"]).to_numpy(dtype=float)
+        r_tr = 0.5 * (df["SUS_TRAVEL_LR"] + df["SUS_TRAVEL_RR"]).to_numpy(dtype=float)
+        f_corr = f_tr + (m_low_kg * ax * cg_height_m / wheelbase_m) / k_f_axle_n_mm
+        r_corr = r_tr - (m_low_kg * ax * cg_height_m / wheelbase_m) / k_r_axle_n_mm
+        fb, rb = [], []
+        for i in range(len(z_bins) - 1):
+            bm = mask & (v >= z_bins[i]) & (v < z_bins[i + 1])
+            if bm.sum() >= 10:
+                fb.append(float(np.median(f_corr[bm])))
+                rb.append(float(np.median(r_corr[bm])))
+            else:
+                fb.append(np.nan)
+                rb.append(np.nan)
+        z_medians[label] = (np.asarray(fb), np.asarray(rb))
+
+    dz_f = z_medians["high"][0] - z_medians["low"][0]
+    dz_r = z_medians["high"][1] - z_medians["low"][1]
+    valid_z = ~np.isnan(dz_f) & ~np.isnan(dz_r)
+    dz_f_mm = float(np.median(dz_f[valid_z]))
+    dz_r_mm = float(np.median(dz_r[valid_z]))
+    dm_f_kg = dz_f_mm * k_f_axle_n_mm / GRAVITY
+    dm_r_kg = dz_r_mm * k_r_axle_n_mm / GRAVITY
+    fuel_front_dist = float(dm_f_kg / (dm_f_kg + dm_r_kg))
+
+    return {
+        "dry_mass_kg": round(dry_mass_kg, 1),
+        "low_fuel_mass_kg": round(m_low_kg, 1),
+        "fuel_delta_mass_kg": round(dm_fuel_kg, 1),
+        "fuel_front_weight_dist": round(fuel_front_dist, 3),
+        "suspension_delta_mm": {
+            "front": round(dz_f_mm, 3),
+            "rear": round(dz_r_mm, 3),
+            "apparent_mass_kg": round(dm_f_kg + dm_r_kg, 2),
+        },
+    }
+
+
 def run_gt3_blackbox_calibration(
     calib_dir: str | Path,
     report_path: str | Path | None = None,
-    dry_mass_kg: float = 1285.0,
+    dry_mass_kg: float | None = None,
     hotlap_fuel_liters: float = 10.0,
     fuel_density_kg_l: float = 0.75,
 ) -> dict[str, Any]:
-    """Run the full Audi R8 LMS GT3 Evo II black-box identification pipeline on 10L Hotlap data."""
+    """Run the full Audi R8 LMS GT3 Evo II black-box identification pipeline on calibration data."""
     cdir = Path(calib_dir)
-    test_mass_kg = float(dry_mass_kg + hotlap_fuel_liters * fuel_density_kg_l)
+    mass_cal: dict[str, Any] | None = None
+    if dry_mass_kg is None:
+        if (cdir / "2L.csv").exists() and (cdir / "110L.csv").exists():
+            mass_cal = calibrate_mass(cdir, fuel_density_kg_l=fuel_density_kg_l)
+            dry_mass_kg = float(mass_cal["dry_mass_kg"])
+        else:
+            dry_mass_kg = 1285.0
+
+    test_mass_kg = round(float(dry_mass_kg + hotlap_fuel_liters * fuel_density_kg_l), 1)
     z0_f_mm, z0_r_mm = _stationary_travel_datum_mm(cdir)
 
     consistency = verify_setup_consistency(cdir)
@@ -459,8 +547,10 @@ def run_gt3_blackbox_calibration(
 
     report = {
         "vehicle_id": "audi_r8_gt3_evo2",
+        "dry_mass_kg": float(dry_mass_kg),
         "calibration_mass_kg": test_mass_kg,
         "hotlap_fuel_liters": float(hotlap_fuel_liters),
+        "mass_calibration": mass_cal,
         "stationary_datum_mm": {"front": z0_f_mm, "rear": z0_r_mm},
         "setup_consistency": consistency,
         "aero_baseline": aero["aero_baseline"],
@@ -480,12 +570,12 @@ def run_gt3_blackbox_calibration(
             "arb_stiffness_n_m": {
                 "unit": "N/m at wheel (effective differential axle roll stiffness above wheel rate k_w)",
                 "formula": "K_roll_diff(click) = k_w + base + per_click * click = (2 * m_axle * g * h_cg) / (track_width * |dz / ay_g|)",
-                "mass_scaling": "linear in m (m / m_cal), where m_cal = 1292.5 kg",
+                "mass_scaling": f"linear in m (m / m_cal), where m_cal = {test_mass_kg} kg",
             },
             "dampers_n_s_m": {
                 "unit": "N*s/m at wheel (vertical velocity threshold knee_velocity_mps = 0.05 m/s)",
                 "formula": "c(click) = base + per_click * click; c_eff = 2 * (ln(z1 / z2) / pi) * sqrt(k_w * m_corner)",
-                "mass_scaling": "sqrt(m / m_cal), where m_cal = 1292.5 kg",
+                "mass_scaling": f"sqrt(m / m_cal), where m_cal = {test_mass_kg} kg",
             },
             "aero_clicks": {
                 "unit": "dimensionless dCl, dCd referenced to A = 2.08 m^2, rho = 1.225 kg/m^3",

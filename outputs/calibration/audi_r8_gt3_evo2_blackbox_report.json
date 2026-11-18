@@ -1,7 +1,19 @@
 {
   "vehicle_id": "audi_r8_gt3_evo2",
-  "calibration_mass_kg": 1292.5,
+  "dry_mass_kg": 1161.2,
+  "calibration_mass_kg": 1168.7,
   "hotlap_fuel_liters": 10.0,
+  "mass_calibration": {
+    "dry_mass_kg": 1161.2,
+    "low_fuel_mass_kg": 1162.7,
+    "fuel_delta_mass_kg": 81.0,
+    "fuel_front_weight_dist": 0.293,
+    "suspension_delta_mm": {
+      "front": 0.641,
+      "rear": 1.45,
+      "apparent_mass_kg": 68.2
+    }
+  },
   "stationary_datum_mm": {
     "front": 15.0,
     "rear": 17.0
@@ -213,7 +225,7 @@
   },
   "aero_baseline": {
     "base_cl": 1.177,
-    "base_aero_front_dist": 0.437
+    "base_aero_front_dist": 0.424
   },
   "calibration_slots": {
     "bumpstop_range_mm": {
@@ -223,29 +235,29 @@
       "rear_per_click_mm": 1.0
     },
     "arb_stiffness_n_m": {
-      "front_base": 44140.8,
-      "front_per_click": 4798.7,
-      "rear_base": 101005.8,
-      "rear_per_click": 5484.7
+      "front_base": 25258.0,
+      "front_per_click": 4339.1,
+      "rear_base": 75718.4,
+      "rear_per_click": 4959.3
     },
     "dampers_n_s_m": {
       "knee_velocity_mps": 0.05,
-      "bump_slow_base": 2865.7,
-      "bump_slow_per_click": 20.9,
-      "bump_fast_base": 1912.5,
-      "bump_fast_per_click": 21.8,
-      "rebound_slow_base": 3456.5,
-      "rebound_slow_per_click": 16.34,
-      "rebound_fast_base": 2054.8,
-      "rebound_fast_per_click": 6.3
+      "bump_slow_base": 2725.0,
+      "bump_slow_per_click": 19.88,
+      "bump_fast_base": 1818.6,
+      "bump_fast_per_click": 20.73,
+      "rebound_slow_base": 3286.8,
+      "rebound_slow_per_click": 15.54,
+      "rebound_fast_base": 1953.9,
+      "rebound_fast_per_click": 5.99
     },
     "aero_clicks": {
       "rear_wing_dcl_per_click": 0.0352,
-      "rear_wing_dcd_per_click": 0.0083,
+      "rear_wing_dcd_per_click": 0.0073,
       "front_splitter_dcl_per_click": 0.0,
       "front_splitter_df_dist_per_click": 0.0,
-      "front_brake_duct_dcd_per_click": 0.0035,
-      "rear_brake_duct_dcd_per_click": 0.0018
+      "front_brake_duct_dcd_per_click": 0.003,
+      "rear_brake_duct_dcd_per_click": 0.0017
     }
   },
   "units_and_formulas": {
@@ -258,12 +270,12 @@
     "arb_stiffness_n_m": {
       "unit": "N/m at wheel (effective differential axle roll stiffness above wheel rate k_w)",
       "formula": "K_roll_diff(click) = k_w + base + per_click * click = (2 * m_axle * g * h_cg) / (track_width * |dz / ay_g|)",
-      "mass_scaling": "linear in m (m / m_cal), where m_cal = 1292.5 kg"
+      "mass_scaling": "linear in m (m / m_cal), where m_cal = 1168.7 kg"
     },
     "dampers_n_s_m": {
       "unit": "N*s/m at wheel (vertical velocity threshold knee_velocity_mps = 0.05 m/s)",
       "formula": "c(click) = base + per_click * click; c_eff = 2 * (ln(z1 / z2) / pi) * sqrt(k_w * m_corner)",
-      "mass_scaling": "sqrt(m / m_cal), where m_cal = 1292.5 kg"
+      "mass_scaling": "sqrt(m / m_cal), where m_cal = 1168.7 kg"
     },
     "aero_clicks": {
       "unit": "dimensionless dCl, dCd referenced to A = 2.08 m^2, rho = 1.225 kg/m^3",
@@ -274,39 +286,39 @@
   "aero_diagnostics": {
     "by_session": {
       "test1": {
-        "cl_front": 0.5145,
-        "cl_rear": 0.663,
+        "cl_front": 0.499,
+        "cl_rear": 0.6785,
         "cl_total": 1.1775,
-        "aero_front_dist": 0.437
+        "aero_front_dist": 0.4238
       },
       "test2": {
-        "cl_front": 0.4546,
-        "cl_rear": 0.8391,
+        "cl_front": 0.4429,
+        "cl_rear": 0.8508,
         "cl_total": 1.2936,
-        "aero_front_dist": 0.3514
+        "aero_front_dist": 0.3423
       },
       "baseline": {
-        "cl_front": 0.4396,
-        "cl_rear": 0.9124,
+        "cl_front": 0.428,
+        "cl_rear": 0.924,
         "cl_total": 1.3521,
-        "aero_front_dist": 0.3252
+        "aero_front_dist": 0.3166
       },
       "test3": {
-        "cl_front": 0.4466,
-        "cl_rear": 0.9205,
+        "cl_front": 0.4348,
+        "cl_rear": 0.9323,
         "cl_total": 1.3671,
-        "aero_front_dist": 0.3267
+        "aero_front_dist": 0.318
       },
       "test4": {
-        "cl_front": 0.4546,
-        "cl_rear": 0.9181,
+        "cl_front": 0.4448,
+        "cl_rear": 0.928,
         "cl_total": 1.3728,
-        "aero_front_dist": 0.3312
+        "aero_front_dist": 0.324
       }
     },
-    "rear_wing_dcl_front_per_click": -0.0154,
-    "rear_wing_dcl_rear_per_click": 0.0506,
-    "rear_duct_dcd_per_click": 0.00175,
-    "front_duct_dcd_per_click": 0.00347
+    "rear_wing_dcl_front_per_click": -0.0146,
+    "rear_wing_dcl_rear_per_click": 0.0498,
+    "rear_duct_dcd_per_click": 0.00168,
+    "front_duct_dcd_per_click": 0.00301
   }
 }
