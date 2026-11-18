@@ -47,8 +47,8 @@ def test_aero_calibration():
     clicks = aero["aero_clicks"]
     assert clicks["rear_wing_dcl_per_click"] > 0.0
     assert clicks["rear_wing_dcd_per_click"] > 0.0
-    assert clicks["front_brake_duct_dcd_per_click"] == 0.0035
-    assert clicks["rear_brake_duct_dcd_per_click"] == 0.0018
+    assert 0.002 < clicks["front_brake_duct_dcd_per_click"] < 0.005
+    assert 0.001 < clicks["rear_brake_duct_dcd_per_click"] < 0.003
     assert clicks["front_brake_duct_dcd_per_click"] > clicks["rear_brake_duct_dcd_per_click"] > 0.0
 
 

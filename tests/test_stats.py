@@ -22,11 +22,12 @@ def test_residual_diagnostics_gaussian():
 def test_block_bootstrap_and_anomaly_mapping():
     rng = np.random.default_rng(7)
     n = 600
+    delta = rng.normal(0.0, 0.1, size=n)
     r = rng.normal(0.0, 0.3, size=n)
     ay = rng.normal(0.0, 6.0, size=n)
     ax = rng.normal(0.0, 4.0, size=n)
     eta_p = np.ones(n)
-    r_dot = -0.5 * r + 0.1 * ay + rng.normal(0.0, 0.02, size=n)
+    r_dot = 1.2 * delta - 0.5 * r + rng.normal(0.0, 0.02, size=n)
 
     df = pd.DataFrame(
         {
@@ -34,6 +35,8 @@ def test_block_bootstrap_and_anomaly_mapping():
             "LAP_INDEX": np.ones(n, dtype=int),
             "LAP_DIST_M": np.linspace(400.0, 1200.0, n),
             "SPEED": rng.uniform(20.0, 60.0, size=n),
+            "STEERANGLE": delta,
+            "STEER_DOT": rng.normal(0.0, 0.3, size=n),
             "ROTY": r,
             "G_LAT": ay,
             "G_LON": ax,
@@ -44,7 +47,7 @@ def test_block_bootstrap_and_anomaly_mapping():
     )
 
     feats = PlanarForceLibrary().build(df)
-    coef = np.array([-0.5, 0.1, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+    coef = np.array([1.2, 0.0, -0.5, 0.0, 0.0, 0.0, 0.0, 0.0])
     boot = block_bootstrap_sindy(
         feats,
         coef,
@@ -54,7 +57,8 @@ def test_block_bootstrap_and_anomaly_mapping():
         seed=7,
     )
     assert len(boot.terms) == 8
-    assert boot.terms[0].ci_95_low < -0.45 and boot.terms[0].ci_95_high > -0.55
+    assert boot.terms[0].ci_95_low < 1.25 and boot.terms[0].ci_95_high > 1.15
+    assert boot.terms[2].ci_95_low < -0.45 and boot.terms[2].ci_95_high > -0.55
 
     z = np.zeros(n)
     z[10] = 6.2

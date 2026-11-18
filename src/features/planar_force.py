@@ -1,4 +1,4 @@
-"""Stage 2: Whole-Vehicle Planar Force & Friction-Ellipse Yaw Dynamics library."""
+"""Stage 2: Whole-Vehicle Planar Force & Bicycle-Model Yaw Dynamics library."""
 
 from __future__ import annotations
 
@@ -9,36 +9,47 @@ from src.features.base import CandidateLibrary, FeatureMatrix
 
 
 class PlanarForceLibrary(CandidateLibrary):
-    """Whole-vehicle planar force candidate library for [a_y, a_x, v, eta_P] -> r_dot.
+    """Whole-vehicle planar force + 2-DOF bicycle library for [delta, delta_dot, a_y, a_x, v, eta_P] -> r_dot.
 
-    Combines transient lateral force buildup (a_y_dot, a_y_dot/v), sideslip
-    acceleration (a_y - v*r), friction-ellipse combined-slip deficit (a_y*|a_x|),
-    pneumatic saturation scaled by tire pressure factor eta_P, and yaw damping.
+    Combines causal steering torque & relaxation lead (delta, delta_dot), linear &
+    speed-dependent yaw damping (r, r/v), lateral-slip velocity proxy ((a_y - v*r)/v),
+    transient lateral force rate (a_y_dot), combined-slip friction-ellipse deficit
+    scaled by tire pressure factor eta_P, and nonlinear front-tire saturation (delta*|delta|).
     """
 
     name = "planar_force"
-    REQUIRED_COLS: tuple[str, ...] = ("ROTY", "G_LAT", "G_LON", "SPEED", "ETA_P", "R_DOT", "AY_DOT")
+    REQUIRED_COLS: tuple[str, ...] = (
+        "STEERANGLE",
+        "STEER_DOT",
+        "ROTY",
+        "G_LAT",
+        "G_LON",
+        "SPEED",
+        "ETA_P",
+        "R_DOT",
+        "AY_DOT",
+    )
 
     FEATURE_NAMES: list[str] = [
+        "delta",
+        "delta_dot",
         "r",
-        "a_y",
+        "r/v",
+        "(a_y-v*r)/v",
         "a_y_dot",
-        "a_y_dot/v",
-        "a_y-v*r",
-        "a_y*|a_x|",
-        "a_y*(a_x^2+a_y^2)/eta_P^2",
-        "r*|r|",
+        "a_y*|a_x|/eta_P^2",
+        "delta*|delta|",
     ]
 
     LATEX_NAMES: list[str] = [
+        r"\delta",
+        r"\dot{\delta}",
         r"r",
-        r"a_y",
+        r"\frac{r}{v}",
+        r"\frac{a_y - v r}{v}",
         r"\dot{a}_y",
-        r"\frac{\dot{a}_y}{v}",
-        r"a_y - v r",
-        r"a_y |a_x|",
-        r"\frac{a_y (a_x^2 + a_y^2)}{\eta_P^2}",
-        r"r |r|",
+        r"\frac{a_y |a_x|}{\eta_P^2}",
+        r"\delta |\delta|",
     ]
 
     def build(self, df: pd.DataFrame) -> FeatureMatrix:
@@ -46,6 +57,8 @@ class PlanarForceLibrary(CandidateLibrary):
         if missing:
             raise ValueError(f"Missing required columns for PlanarForceLibrary: {missing}")
 
+        delta = df["STEERANGLE"].to_numpy(dtype=float)
+        delta_dot = df["STEER_DOT"].to_numpy(dtype=float)
         r = df["ROTY"].to_numpy(dtype=float)
         ay = df["G_LAT"].to_numpy(dtype=float)
         ax = df["G_LON"].to_numpy(dtype=float)
@@ -56,14 +69,14 @@ class PlanarForceLibrary(CandidateLibrary):
 
         theta = np.column_stack(
             [
+                delta,
+                delta_dot,
                 r,
-                ay,
+                r / v,
+                (ay - v * r) / v,
                 ay_dot,
-                ay_dot / v,
-                ay - v * r,
-                ay * np.abs(ax),
-                ay * (ax**2 + ay**2) / (eta_p**2),
-                r * np.abs(r),
+                ay * np.abs(ax) / (eta_p**2),
+                delta * np.abs(delta),
             ]
         )
 

@@ -95,7 +95,8 @@ def _convert_to_si(df: pd.DataFrame, units: dict[str, str]) -> pd.DataFrame:
     for g_col in ("G_LAT", "G_LON"):
         if g_col in out.columns:
             unit = units.get(g_col, "m/s2").lower()
-            if unit == "g":
+            # ACC MoTeC exports often label G_LAT/G_LON as "m/s2" while storing values in g (~[-3, +3]).
+            if unit == "g" or (not out[g_col].empty and float(out[g_col].abs().max()) <= 5.0):
                 out[g_col] = out[g_col] * 9.80665
 
     return out

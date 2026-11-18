@@ -44,7 +44,7 @@ def _smooth_roll_gradients(df: pd.DataFrame) -> tuple[float, float]:
     st_rr = savgol_filter(df["SUS_TRAVEL_RR"].to_numpy(dtype=float), 41, 3)
     vs_lf = savgol_filter(df["SUS_TRAVEL_LF"].to_numpy(dtype=float), 41, 3, deriv=1, delta=0.005)
     vs_rf = savgol_filter(df["SUS_TRAVEL_RF"].to_numpy(dtype=float), 41, 3, deriv=1, delta=0.005)
-    ay = savgol_filter(df["G_LAT"].to_numpy(dtype=float), 41, 3)
+    ay = savgol_filter(df["G_LAT"].to_numpy(dtype=float) / 9.80665, 41, 3)
 
     no_bs = np.ones(len(df), dtype=bool)
     for c in CORNERS:
@@ -153,7 +153,7 @@ def _estimate_aero_downforce(
 ) -> tuple[float, float, float, float]:
     v = df["SPEED"].to_numpy(dtype=float)
     ax = savgol_filter(v, 51, 3, deriv=1, delta=0.005)
-    ay_g = df["G_LAT"].to_numpy(dtype=float)
+    ay_g = df["G_LAT"].to_numpy(dtype=float) / 9.80665
     f_tr = 0.5 * (df["SUS_TRAVEL_LF"] + df["SUS_TRAVEL_RF"]).to_numpy(dtype=float)
     r_tr = 0.5 * (df["SUS_TRAVEL_LR"] + df["SUS_TRAVEL_RR"]).to_numpy(dtype=float)
 
@@ -177,7 +177,7 @@ def _estimate_aero_downforce(
 def _wot_ax_curve(df: pd.DataFrame, bins: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     v = df["SPEED"].to_numpy(dtype=float)
     ax = savgol_filter(v, 81, 3, deriv=1, delta=0.005)
-    ay_g = df["G_LAT"].to_numpy(dtype=float)
+    ay_g = df["G_LAT"].to_numpy(dtype=float) / 9.80665
     wot = (
         (df["THROTTLE"].to_numpy() == 100)
         & (df["BRAKE"].to_numpy() == 0)

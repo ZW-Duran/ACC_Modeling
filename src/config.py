@@ -106,7 +106,7 @@ class DataConfig:
 
 @dataclass
 class CurationConfig:
-    savgol_window: int = 21
+    savgol_window: int = 41
     savgol_polyorder: int = 3
     p_opt_psi: float = 27.0
     sigma_p_psi: float = 1.5

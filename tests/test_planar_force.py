@@ -13,6 +13,8 @@ from src.modeling.trainer import fit_yaw_sindy
 def test_planar_force_library_recovers_synthetic_ode():
     rng = np.random.default_rng(123)
     n = 3000
+    delta = rng.uniform(-0.3, 0.3, size=n)
+    delta_dot = rng.uniform(-1.0, 1.0, size=n)
     r = rng.uniform(-0.8, 0.8, size=n)
     ay = rng.uniform(-15.0, 15.0, size=n)
     ax = rng.uniform(-12.0, 12.0, size=n)
@@ -20,10 +22,12 @@ def test_planar_force_library_recovers_synthetic_ode():
     ay_dot = rng.uniform(-30.0, 30.0, size=n)
     eta_p = rng.uniform(0.7, 1.0, size=n)
 
-    r_dot = -0.8 * r + 0.15 * ay + 0.25 * (ay_dot / v) - 0.02 * ay * np.abs(ax)
+    r_dot = 1.4 * delta - 0.8 * r + 0.015 * ay_dot - 0.02 * ay * np.abs(ax) / (eta_p**2)
 
     df = pd.DataFrame(
         {
+            "STEERANGLE": delta,
+            "STEER_DOT": delta_dot,
             "ROTY": r,
             "G_LAT": ay,
             "G_LON": ax,
@@ -42,10 +46,10 @@ def test_planar_force_library_recovers_synthetic_ode():
     res = evaluate_model(model, feats)
 
     assert res.r2 > 0.9999
-    assert np.isclose(model.coefficients[0], -0.8, atol=1e-3)
-    assert np.isclose(model.coefficients[1], 0.15, atol=1e-3)
-    assert np.isclose(model.coefficients[3], 0.25, atol=1e-3)
-    assert np.isclose(model.coefficients[5], -0.02, atol=1e-3)
+    assert np.isclose(model.coefficients[0], 1.4, atol=1e-3)
+    assert np.isclose(model.coefficients[2], -0.8, atol=1e-3)
+    assert np.isclose(model.coefficients[5], 0.015, atol=1e-3)
+    assert np.isclose(model.coefficients[6], -0.02, atol=1e-3)
 
 
 def test_modular_config_loading():
@@ -73,7 +77,7 @@ def test_modular_config_loading():
     assert gt3.setup["suspension"]["arb_clicks"] == [4, 2]
     assert gt3.track.track_id == "barcelona_catalunya"
     assert len(gt3.track.corners) == 8
-    assert gt3.curation.savgol_window == 21
+    assert gt3.curation.savgol_window == 41
     assert gt3.modeling.formulation == "planar_force"
 
     gt4 = load_config(repo_root / "configs/experiments/stage2_planar_force/barcelona__audi_r8_gt4__a1.yaml")

@@ -1,5 +1,5 @@
 formulation: "planar_force"
-stlsq_threshold: 0.01
+stlsq_threshold: 0.02
 stlsq_alpha: 0.05
 normalize_columns: true
 bootstrap_n_resamples: 500

@@ -1,4 +1,4 @@
-savgol_window: 21
+savgol_window: 41
 savgol_polyorder: 3
 clean_trim_mode: "speed_threshold"
 clean_speed_threshold_kmh: 100.0

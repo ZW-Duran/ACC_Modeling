@@ -145,6 +145,14 @@ def curate_telemetry(
         deriv=1,
         delta=dt,
     )
+    if "STEERANGLE" in out.columns:
+        out["STEER_DOT"] = savgol_filter(
+            out["STEERANGLE"].to_numpy(dtype=float),
+            window_length=cfg.savgol_window,
+            polyorder=cfg.savgol_polyorder,
+            deriv=1,
+            delta=dt,
+        )
 
     p_mean, eta_p = compute_tire_grip_factor(out, cfg.p_opt_psi, cfg.sigma_p_psi)
     out["P_MEAN_PSI"] = p_mean
