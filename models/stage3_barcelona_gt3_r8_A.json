@@ -1,0 +1,14 @@
+{
+  "model_type": "stage3_wheel_corner_physics",
+  "vehicle_id": "audi_r8_gt3_evo2",
+  "fuel_liters": 2.0,
+  "params": {
+    "mu0": 1.29576,
+    "pacejka_b": 6.68304,
+    "pacejka_c": 1.72853,
+    "pacejka_e": -2.0,
+    "load_sensitivity": 0.33902,
+    "iz_kg_m2": 3500.0,
+    "vy_compliance_s": -0.19241
+  }
+}

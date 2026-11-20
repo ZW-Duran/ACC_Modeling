@@ -90,10 +90,13 @@ ACC_Modeling/
 ├── models/                       # Exported Stage 2 sparse ODE models (.json)
 ├── outputs/
 │   ├── calibration/                                # Black-box identification reports (.json)
-│   └── stage2_barcelona_gt3_r8_A/                  # GT3 Stage 2 full-lap & corner diagnostic plots & report
+│   ├── stage2_barcelona_gt3_r8_A/                  # GT3 Stage 2 full-lap & corner diagnostic plots & report
+│   └── stage3_barcelona_gt3_r8_A/                  # GT3 Stage 3 4-wheel physics plots & benchmark report
 ├── notebooks/
-│   └── stage2_gt3_discrete_sindy.ipynb             # Consolidated GT3 Stage 2 discrete-time SINDy modeling (full lap + T3/T4/T5/T13-15)
-├── src/
+│   ├── stage2_gt3_discrete_sindy.ipynb             # Consolidated GT3 Stage 2 discrete-time SINDy modeling
+│   └── stage3_gt3_wheel_physics.ipynb              # Stage 3 first-principles 4-wheel Pacejka & load-transfer modeling (No SINDy)
+├── src/                          # Source package (`from src import ...`; see src/README.md for full API index)
+│   ├── README.md                 # Complete API Reference & Module Index (signatures, units, sampling rates)
 │   ├── cli.py                    # Modular CLI entry point (`acc-modeling`)
 │   ├── config.py                 # Composable YAML loader (Car, Setup, Track, Curation, Modeling)
 │   ├── calibration/              # Click-to-SI black-box calibration from controlled Hotlap telemetry

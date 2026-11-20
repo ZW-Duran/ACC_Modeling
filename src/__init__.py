@@ -48,7 +48,17 @@ from src.features import (
     WheelCornerLibrary,
     estimate_corner_normal_load,
 )
-from src.modeling import EvaluationResult, FittedYawModel, evaluate_model, fit_yaw_sindy
+from src.modeling import (
+    EvaluationResult,
+    FittedYawModel,
+    Stage3PhysicsParams,
+    Stage3SimulationResult,
+    Stage3WheelCornerModel,
+    compute_corner_normal_loads,
+    evaluate_model,
+    fit_yaw_sindy,
+    run_stage3_pipeline,
+)
 from src.stats import (
     AnomalySummary,
     BootstrapSummary,
@@ -91,6 +101,11 @@ __all__ = [
     "fit_yaw_sindy",
     "EvaluationResult",
     "evaluate_model",
+    "Stage3PhysicsParams",
+    "Stage3SimulationResult",
+    "Stage3WheelCornerModel",
+    "compute_corner_normal_loads",
+    "run_stage3_pipeline",
     # Calibration
     "verify_setup_consistency",
     "calibrate_mass",
