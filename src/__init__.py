@@ -22,12 +22,18 @@ Unit & Sampling Conventions
 """
 
 from src.calibration import (
+    AxleVerificationMetrics,
+    BumpstopVerificationMetrics,
+    CalibrationVerificationResult,
+    CornerTravelVerificationMetrics,
     calibrate_aero,
     calibrate_arb_stiffness,
     calibrate_bumpstop_range,
     calibrate_dampers,
     calibrate_mass,
+    resolve_setup_physics,
     run_gt3_blackbox_calibration,
+    verify_calibrated_coefficients,
     verify_setup_consistency,
 )
 from src.cli import run_pipeline
@@ -49,15 +55,18 @@ from src.features import (
     estimate_corner_normal_load,
 )
 from src.modeling import (
+    SCENARIO_WINDOWS_M,
+    AeroDragVerificationResult,
     EvaluationResult,
     FittedYawModel,
-    Stage3PhysicsParams,
-    Stage3SimulationResult,
-    Stage3WheelCornerModel,
+    ScenarioMetrics,
+    SuspensionVerificationState,
     compute_corner_normal_loads,
     evaluate_model,
     fit_yaw_sindy,
-    run_stage3_pipeline,
+    predict_suspension_state,
+    verify_stage3_scenarios,
+    verify_straight_aero_drag,
 )
 from src.stats import (
     AnomalySummary,
@@ -69,6 +78,7 @@ from src.stats import (
     map_anomalies_to_corners,
 )
 from src.visualization import (
+    plot_finite_diff_yaw_accel,
     plot_race_anomaly_trace,
     plot_residual_distribution,
     plot_yaw_acceleration_fit,
@@ -96,17 +106,20 @@ __all__ = [
     "estimate_corner_normal_load",
     "ChassisSetupSpec",
     "FullChassisLibrary",
-    # Modeling & Evaluation
+    # Modeling & Stage 3 Verification
     "FittedYawModel",
     "fit_yaw_sindy",
     "EvaluationResult",
     "evaluate_model",
-    "Stage3PhysicsParams",
-    "Stage3SimulationResult",
-    "Stage3WheelCornerModel",
+    "SCENARIO_WINDOWS_M",
+    "AeroDragVerificationResult",
+    "SuspensionVerificationState",
+    "ScenarioMetrics",
     "compute_corner_normal_loads",
-    "run_stage3_pipeline",
-    # Calibration
+    "predict_suspension_state",
+    "verify_straight_aero_drag",
+    "verify_stage3_scenarios",
+    # Calibration & Stage 3 Verification
     "verify_setup_consistency",
     "calibrate_mass",
     "calibrate_bumpstop_range",
@@ -114,6 +127,12 @@ __all__ = [
     "calibrate_arb_stiffness",
     "calibrate_dampers",
     "run_gt3_blackbox_calibration",
+    "BumpstopVerificationMetrics",
+    "AxleVerificationMetrics",
+    "CornerTravelVerificationMetrics",
+    "CalibrationVerificationResult",
+    "resolve_setup_physics",
+    "verify_calibrated_coefficients",
     # Statistics & Diagnostics
     "ResidualDiagnostics",
     "analyze_residuals",
@@ -123,6 +142,7 @@ __all__ = [
     "AnomalySummary",
     "map_anomalies_to_corners",
     # Visualization
+    "plot_finite_diff_yaw_accel",
     "plot_yaw_acceleration_fit",
     "plot_residual_distribution",
     "plot_race_anomaly_trace",

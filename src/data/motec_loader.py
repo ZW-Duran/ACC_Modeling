@@ -12,6 +12,7 @@ import pandas as pd
 
 CORE_CHANNELS: tuple[str, ...] = (
     "Time",
+    "Distance",
     "ROTY",
     "STEERANGLE",
     "SPEED",
@@ -92,10 +93,15 @@ def _convert_to_si(df: pd.DataFrame, units: dict[str, str]) -> pd.DataFrame:
         if "km/h" in unit or "kph" in unit:
             out["SPEED"] = out["SPEED"] / 3.6
 
+    if "Distance" in out.columns:
+        unit = units.get("Distance", "m").lower()
+        if unit == "km":
+            out["Distance"] = out["Distance"] * 1000.0
+
     for g_col in ("G_LAT", "G_LON"):
         if g_col in out.columns:
             unit = units.get(g_col, "m/s2").lower()
-            # ACC MoTeC exports often label G_LAT/G_LON as "m/s2" while storing values in g (~[-3, +3]).
+            # ACC MoTeC exports G_LAT in g (~[-3, +3]) even when labeled "m/s2".
             if unit == "g" or (not out[g_col].empty and float(out[g_col].abs().max()) <= 5.0):
                 out[g_col] = out[g_col] * 9.80665
 

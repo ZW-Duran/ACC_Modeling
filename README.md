@@ -4,9 +4,9 @@ Physics-informed vehicle dynamics modeling, black-box setup calibration, and ben
 
 ---
 
-## Engineering Evolution & 4-Stage Modeling Roadmap
+## Engineering Evolution & 3-Stage Modeling Roadmap
 
-This project systematically climbs the vehicle-dynamics modeling hierarchy—using **Stage 2 (SINDy)** as a sparse whole-vehicle benchmark, then moving to **standard physics-based / nonlinear identification** in Stages 3 and 4 rather than restricting the pipeline to SINDy:
+This project systematically climbs the vehicle-dynamics modeling hierarchy—using **Stage 2 (SINDy)** as a sparse whole-vehicle benchmark, then moving to **first-principles full-chassis physics verification** in **Stage 3 (`stage3_Verification`)** rather than restricting the pipeline to SINDy:
 
 ### Stage 1 — Driver-Input Kinematic Regression *(Deprecated)*
 - **Approach**: Initial prototypes regressed coupled vehicle states (`SPEED`, `G_LAT`, `G_LON`, `ROTY`) directly against raw driver inputs (`STEERANGLE`, `THROTTLE`, `BRAKE`) using generic polynomials.
@@ -16,23 +16,26 @@ This project systematically climbs the vehicle-dynamics modeling hierarchy—usi
 - **Telemetry Sampling Policy**: `training_Barcelona_GT3.csv` and `verification_Barcelona_GT3.csv` are exported at **20 Hz** (`dt = 0.05 s`, `savgol_window=5`), matching the native 20 Hz update rate of ACC's `ROTY` and `G_LAT` channels and eliminating zero-order-hold differentiation ringing. Meanwhile, `data/calibration/` retains **200 Hz** exports for high-frequency suspension/damper velocity calibration.
 - **Physical Rationale**: Because ACC's `G_LON` channel is integer-quantized (`{-2, -1, 0, 1} g`), longitudinal acceleration $a_x \approx \dot{v}$ is computed directly by differentiating `SPEED` (`m/s`). To resolve the $90^\circ$ phase-orthogonality between $r$ and $\dot{r}$, Stage 2 models the discrete-time state transition $r_{k+1} = F_A(\dots)$ via **PySINDy (`STLSQ`)**:
   $$r_{k+1} = F_A\left(r_k,\; a_{y,k},\; a_{y,k-1},\; a_{y,k} a_{x,k},\; \frac{a_{y,k}(a_{x,k}^2 + a_{y,k}^2)}{\eta_{P,k}^2},\; r_k|r_k|\right)$$
-- **Finding & Benchmark Role**: On Audi R8 LMS GT3 Evo II (`Barcelona R8_A`), the discrete-time formulation achieves **$R^2 = 0.9865$** (`RMSE = 0.0393 rad/s`) on full-lap training and **$R^2 = 0.9829$** (`RMSE = 0.0454 rad/s`) on out-of-sample verification, with consistent `0.97–0.99` $R^2$ across individual corners (`T3`, `T4`, `T5`, `T13–T15`). Stage 2 serves as our **baseline benchmark** for evaluating physics-based Stages 3 and 4.
+- **Finding & Benchmark Role**: On Audi R8 LMS GT3 Evo II (`Barcelona R8_A`), the discrete-time formulation achieves **$R^2 = 0.9865$** (`RMSE = 0.0393 rad/s`) on full-lap training and **$R^2 = 0.9829$** (`RMSE = 0.0454 rad/s`) on out-of-sample verification, with consistent `0.97–0.99` $R^2$ across individual corners (`T3`, `T4`, `T5`, `T13–T15`). Stage 2 serves as our **baseline benchmark**.
 
-### Stage 3 — Single-Wheel & Suspension Contact-Patch Modeling *(Next Focus — Standard Physics / Nonlinear Modeling)*
-- **Modeling Choice**: Rather than forcing SINDy sparse polynomials, Stage 3 applies **standard first-principles and nonlinear vehicle-dynamics modeling** (e.g., Pacejka/brush tire-force curves, nonlinear least squares, and per-corner vertical/lateral force balance) directly benchmarked against Stage 2 SINDy.
-- **Physical Architecture (`WheelCornerLibrary`)**: Decompose dynamics down to individual corners (`LF`, `RF`, `LR`, `RR`) using the calibrated vehicle parameters:
-  - Normal load $F_z(t)$ from mass distribution, pitch/roll load transfer ($a_x, a_y, h_{\mathrm{cg}}, L, W$), ARB roll distribution, and speed-dependent aerodynamic downforce ($\propto v^2$).
-  - Direct telemetry integration of corner suspension travel (`SUS_TRAVEL_*`), bumpstop engagement (`BUMPSTOP_FORCE_*`, `BUMPSTOPUP_RIDE_*`), wheel slip (`WHEEL_SPEED_*`), and carcass pressure/temperature (`TYRE_PRESS_*`, `TYRE_TAIR_*`).
+### Stage 3 — Full-Chassis Physics, Aero Drag & Bumpstop Verification *(No SINDy)*
+- **Unified Verification (`src/modeling/stage3_verification.py`, `notebooks/stage3_Verification.ipynb`)**: Combines zero-shot black-box calibration verification (`src/calibration/verification.py`) with full-chassis suspension travel, progressive bumpstop force, and main-straight aerodynamic drag verification using `AX_SPEED = d(SPEED)/dt` (since `G_LON` is unusable), `G_LAT` (converted from `g` to `m/s^2`), and direct MoTeC `Distance`:
+  - **Main-Straight Aero Drag (`0–700 m`)**: Integrates `wing = 0` WOT acceleration plus setup `dcd_wing` and `dcd_ducts` (`RMSE = 0.90 km/h` Training, `1.03 km/h` Verification).
+  - **Zero-Shot Calibration & Progressive Bumpstop**: `22.0 mm` front / `38.0 mm` rear engagement thresholds (`96.7–99.5%` match accuracy) plus ACC's progressive bumpstop law ($F_{\mathrm{bs}} = k_{\mathrm{prog}}(z - z_{\mathrm{thr}})^{2.73}$, matching negative-compression MoTeC `BUMPSTOP_FORCE`), reducing in-bumpstop front travel error (`T1` heavy braking `LF RMSE = 2.17 mm`).
+  - **5 Continuous Barcelona Segments**:
+    1. **Main Straight (`0–710 m`)**: Aero drag & pitch attitude (`Mean Travel RMSE = 1.75 mm`).
+    2. **T1 Heavy Braking (`700–960 m`)**: Longitudinal pitch transfer & progressive front bumpstop (`Mean Travel RMSE = 2.71 mm`).
+    3. **T3 High-Speed Long Corner (`960–1550 m`)**: Aero + ARB lateral load transfer (`Mean Travel RMSE = 1.87 mm`).
+    4. **T4–T5 Trail Braking (`1550–2350 m`)**: Combined diagonal load transfer (`Mean Travel RMSE = 2.20 mm`).
+    5. **T10–T16 Continuous Complex to Finish (`3150–4586 m`)**: T10 heavy braking + T11 curb strike + T12–T16 chicane (`Mean Travel RMSE = 2.90 mm` Training / `2.76 mm` Verification; plotted as separate full-width Front and Rear figures).
 
 #### Black-Box Setup Parameter Calibration *(Click-to-SI Identification)*
 Because ACC exposes most garage settings as integer UI clicks, [calibration/blackbox.py](src/calibration/blackbox.py) identifies physical parameters for `configs/cars/<vehicle_id>/vehicle.yaml` from controlled single-variable Hotlap telemetry using the **`click = 0` intercept convention** $y(\text{click}) = y_{\text{base}} + k \cdot \text{click}$:
+- **Mass Identification (`calibrate_mass`, unit: $\mathrm{kg}$)**: Solves dry mass from 5th-gear WOT acceleration ratio between `2L.csv` and `110L.csv` (`1161.2 kg` dry) and fuel front share (`29.3%`) from straight-line spring compression.
 - **Aerodynamics (`aero_baseline`, `aero_clicks`, dimensionless $C_L, C_D$)**: Identifies $C_L$ and front aero balance from pitch-corrected straight-line spring compression $\Delta F_z = k_w \Delta z \propto \frac{1}{2}\rho A v^2$, and separates rear-wing, front brake-duct, and rear brake-duct $\Delta C_D$ via speed-matched full-throttle acceleration differences $\Delta F_d = -m \Delta a_x$.
 - **Bumpstop Engagement (`bumpstop_range_mm`, unit: $\mathrm{mm}$)**: Solves the linear engagement `SUS_TRAVEL` threshold where `BUMPSTOPUP_RIDE == 1` across two bumpstop window settings.
 - **Anti-Roll Bars (`arb_stiffness_n_m`, unit: $\mathrm{N/m}$ at wheel)**: Extracts differential wheel-referenced roll stiffness $K_{\mathrm{roll,diff}} - k_w$ from steady-state cornering roll gradients $|\Delta z_{\mathrm{L-R}} / a_y|$ with bumpstop-free filtering.
 - **Virtual Damper Dyno (`dampers_n_s_m`, unit: $\mathrm{N\cdot s/m}$ at wheel)**: Extracts bump/rebound and slow/fast damping around `knee_velocity_mps = 0.05 m/s` using high-pass half-cycle logarithmic ringdown $\zeta = \ln(z_1/z_2)/\pi,\; c = 2\zeta\sqrt{k_w m_{\mathrm{corner}}}$.
-
-### Stage 4 — Full-Chassis & Setup Parameterized Dynamics *(Future Goal)*
-- **Physical Architecture (`FullChassisLibrary` + `ChassisSetupSpec`)**: Couple all four wheel corners with explicit garage setup parameters—caster, per-wheel camber and toe angles, wheel rates, front/rear anti-roll bars (ARBs), bump/rebound damping, and aerodynamic rake—to model setup sensitivity directly from track telemetry and compare against Stage 2/3.
 
 ---
 
@@ -82,19 +85,18 @@ ACC_Modeling/
 │   ├── curation/                 # Savitzky-Golay & session-trimming presets
 │   ├── modeling/                 # Identification optimizer & statistical validation presets
 │   └── experiments/
-│       ├── stage2_planar_force/  # Stage 2 whole-vehicle planar force SINDy manifests
-│       ├── stage3_wheel_corner/  # Reserved for Stage 3 single-wheel manifests
-│       └── stage4_full_chassis/  # Reserved for Stage 4 full-chassis manifests
+│       ├── stage2_planar_force/             # Stage 2 whole-vehicle planar force SINDy manifests
+│       └── stage3_verification/             # Stage 3 full-chassis, aero drag & bumpstop verification manifests
 ├── data/                         # MoTeC telemetry (.csv/.ld/.ldx, gitignored; see data/README.md)
 │   └── calibration/              # Controlled single-variable Hotlap CSVs for black-box calibration
-├── models/                       # Exported Stage 2 sparse ODE models (.json)
+├── models/                       # Exported Stage 2 fitted models (.json)
 ├── outputs/
-│   ├── calibration/                                # Black-box identification reports (.json)
-│   ├── stage2_barcelona_gt3_r8_A/                  # GT3 Stage 2 full-lap & corner diagnostic plots & report
-│   └── stage3_barcelona_gt3_r8_A/                  # GT3 Stage 3 4-wheel physics plots & benchmark report
+│   ├── calibration/                                     # Black-box identification reports (.json)
+│   ├── stage2_barcelona_gt3_r8_A/                       # GT3 Stage 2 full-lap & corner diagnostic plots & report
+│   └── stage3_barcelona_gt3_verification/               # GT3 Stage 3 aero drag, bumpstop & scenario verification plots & report
 ├── notebooks/
-│   ├── stage2_gt3_discrete_sindy.ipynb             # Consolidated GT3 Stage 2 discrete-time SINDy modeling
-│   └── stage3_gt3_wheel_physics.ipynb              # Stage 3 first-principles 4-wheel Pacejka & load-transfer modeling (No SINDy)
+│   ├── stage2_gt3_discrete_sindy.ipynb                  # Stage 2 GT3 discrete-time SINDy modeling (benchmark baseline)
+│   └── stage3_Verification.ipynb                        # Stage 3 unified aero drag, bumpstop & full-chassis verification
 ├── src/                          # Source package (`from src import ...`; see src/README.md for full API index)
 │   ├── README.md                 # Complete API Reference & Module Index (signatures, units, sampling rates)
 │   ├── cli.py                    # Modular CLI entry point (`acc-modeling`)

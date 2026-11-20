@@ -10,15 +10,17 @@ All primary symbols are re-exported at top level via `src/__init__.py` (`from sr
 | Quantity | Column / Variable | Unit | Notes |
 | :--- | :--- | :--- | :--- |
 | Time | `Time` | `s` | Stably sorted ascending on load (`load_motec_csv`) |
+| Lap Distance | `Distance`, `LAP_DIST_M` | `m` | Direct MoTeC `Distance` channel used when exported (fallback: trapezoidal integration of `SPEED`) |
 | Speed | `SPEED` | `m/s` | Converted from `km/h` |
 | Yaw rate | `ROTY` ($r$) | `rad/s` | Converted from `deg/s` |
 | Yaw acceleration | `R_DOT` ($\dot{r}$) | `rad/s^2` | Analytical SG 1st derivative of `ROTY` |
-| Lateral / Longitudinal accel | `G_LAT`, `G_LON`, `AX_SPEED` | `m/s^2` | ACC mislabeled `g` auto-scaled by `9.80665`; `AX_SPEED = dv/dt` |
+| Lateral accel | `G_LAT` | `m/s^2` | Exported by ACC in `g` (`~[-3, +3]`) even when labeled `m/s2`; auto-scaled by `9.80665` |
+| Longitudinal accel | `AX_SPEED` | `m/s^2` | Computed via `d(SPEED)/dt` (`G_LON` in ACC CSV is integer-quantized/unusable) |
 | Steering angle / rate | `STEERANGLE`, `STEER_DOT` | `rad`, `rad/s` | Converted from `deg` |
 | Tire pressure & grip | `TYRE_PRESS_*`, `ETA_P` | `psi`, `[-]` | $\eta_P = \exp(-(\bar{P} - P_{\mathrm{opt}})^2 / 2\sigma_P^2)$ |
 | Suspension travel | `SUS_TRAVEL_*` | `mm` | Positive = compression |
 
-- **20 Hz (`dt = 0.05 s`, `savgol_window = 5`)**: Used by Stage 2 planar-force SINDy (`training_Barcelona_GT3.csv`, `verification_Barcelona_GT3.csv`) to match ACC's native 20 Hz `ROTY` / `G_LAT` update rate.
+- **20 Hz (`dt = 0.05 s`, `savgol_window = 5`)**: Used by Stage 2 SINDy and Stage 3 full-chassis verification (`training_Barcelona_GT3.csv`, `verification_Barcelona_GT3.csv`) to match ACC's native 20 Hz `ROTY` / `G_LAT` update rate.
 - **200 Hz (`dt = 0.005 s`)**: Required by `src/calibration/blackbox.py` to resolve `> 1.2 Hz` damper ringdown and bumpstop impact velocities.
 
 ---
@@ -26,7 +28,7 @@ All primary symbols are re-exported at top level via `src/__init__.py` (`from sr
 ## 1. Top-Level Entry Points (`src/`)
 
 ### `src/__init__.py`
-Re-exports **37 public symbols** across all subpackages (`__version__ = "0.2.0"`).
+Re-exports all public symbols across subpackages (`__version__ = "0.2.0"`).
 
 ### `src/cli.py`
 | Symbol | Signature | Inputs | Returns | Notes |
@@ -75,10 +77,10 @@ Re-exports **37 public symbols** across all subpackages (`__version__ = "0.2.0"`
 
 ---
 
-## 3. Black-Box Setup Calibration (`src/calibration/`)
+## 3. Black-Box Setup Calibration & Stage 3 Verification (`src/calibration/`)
 
-### `src/calibration/blackbox.py`
-> **Sampling Assumption**: All functions in this module assume **200 Hz** (`dt = 0.005 s`) MoTeC telemetry exported from controlled single-variable Hotlap runs. All click coefficients follow the **`click = 0` intercept convention**: $y(\text{click}) = y_{\text{base}} + k \cdot \text{click}$.
+### `src/calibration/blackbox.py` *(200 Hz Identification)*
+> **Sampling Assumption**: Assumes **200 Hz** (`dt = 0.005 s`) MoTeC telemetry exported from controlled single-variable Hotlap runs. All click coefficients follow the **`click = 0` intercept convention**: $y(\text{click}) = y_{\text{base}} + k \cdot \text{click}$.
 
 | Symbol | Signature | Inputs / Key Args | Returns / Units | Notes |
 | :--- | :--- | :--- | :--- | :--- |
@@ -90,6 +92,13 @@ Re-exports **37 public symbols** across all subpackages (`__version__ = "0.2.0"`
 | `calibrate_dampers` | `calibrate_dampers(calib_dir, kw_f_n_m=153000.0, kw_r_n_m=163000.0, mass_kg=1285.0, ...)` | `baseline`, `test9`, `test9_out` | `dict` `[N*s/m at wheel]` (`bump/rebound`, `slow/fast` base & slope) | `> 1.2 Hz` half-cycle ringdown log-decrement; scales as $\sqrt{m}$ |
 | `run_gt3_blackbox_calibration` | `run_gt3_blackbox_calibration(calib_dir, report_path=None, dry_mass_kg=None, hotlap_fuel_liters=10.0, fuel_density_kg_l=0.75)` | `calib_dir: str \| Path` | `dict` (full JSON report) | Auto-runs `calibrate_mass` if `2L.csv` & `110L.csv` exist; updates all slots consistently |
 
+### `src/calibration/verification.py` *(Stage 3 — Zero-Shot Calibration Verification)*
+| Symbol | Signature / Members | Inputs / Args | Returns | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| `resolve_setup_physics` | `resolve_setup_physics(car, setup, fuel_liters=2.0)` | `car: CarConfig`, `setup: dict` | `dict[str, float]` | Resolves SI `mass_kg`, wheel rates, ARB `k_eff`, roll share, aero `Cl`, bumpstop thresholds |
+| `CalibrationVerificationResult` | `bumpstop`, `axle`, `corners`, time-series travel arrays, `.to_dict()` | — | — | Holds Stage 3 zero-shot verification metrics and arrays |
+| `verify_calibrated_coefficients` | `verify_calibrated_coefficients(df_raw, df_curated, car, setup, fuel_liters=2.0)` | Raw & curated 20 Hz SI telemetry | `CalibrationVerificationResult` | Verifies bumpstop `BUMPSTOPUP_RIDE`, ARB roll $\Delta z_{L-R}$, aero heave, and 4-corner `SUS_TRAVEL` with zero fitting |
+
 ---
 
 ## 4. Feature Libraries (`src/features/`)
@@ -98,30 +107,22 @@ Re-exports **37 public symbols** across all subpackages (`__version__ = "0.2.0"`
 | Symbol | Kind | Members / Signature | Notes |
 | :--- | :--- | :--- | :--- |
 | `FeatureMatrix` | `dataclass` | `theta: np.ndarray`, `target: np.ndarray`, `feature_names: list[str]`, `latex_names: list[str]`, `target_name: str` | Container passed to SINDy trainer/evaluator |
-| `CandidateLibrary` | `ABC` | `build(df: pd.DataFrame) -> FeatureMatrix` | Abstract base class for Stage 2–4 libraries |
+| `CandidateLibrary` | `ABC` | `build(df: pd.DataFrame) -> FeatureMatrix` | Abstract base class |
 
 ### `src/features/planar_force.py` *(Stage 2 — Active)*
 | Symbol | Signature | Inputs | Returns | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| `PlanarForceLibrary.build` | `build(df)` | `df` (`N >= 3`) with `ROTY`, `G_LAT`, `SPEED`, `ETA_P`, `AX_SPEED` (or `G_LON`) | `FeatureMatrix`: `theta` `(N-2, 6)`, `target` `r_{k+1}` `(N-2,)` `[rad/s]` | Discrete-time 6-term library `[r_k, a_y_k, a_y_k-1, a_y_k*a_x_k, a_y_k*(a_x_k^2+a_y_k^2)/eta_P_k^2, r_k*|r_k|]`; align `df` with `df.iloc[1:-1]` |
+| `PlanarForceLibrary.build` | `build(df)` | `df` (`N >= 3`) with `ROTY`, `G_LAT`, `SPEED`, `ETA_P`, `AX_SPEED` (or `G_LON`) | `FeatureMatrix`: `theta` `(N-2, 6)`, `target` `r_{k+1}` `(N-2,)` `[rad/s]` | Discrete-time 6-term library `[r_k, a_y_k, a_y_k-1, a_y_k*a_x_k, a_y_k*(a_x_k^2+a_y_k^2)/eta_P_k^2, r_k*|r_k|]`; align `df` with `df.iloc[2:]` |
 
-### `src/features/wheel_corner.py` *(Stage 3 Scaffold)*
-| Symbol | Signature | Inputs | Returns | Notes |
-| :--- | :--- | :--- | :--- | :--- |
-| `estimate_corner_normal_load` | `estimate_corner_normal_load(df, corner, car, aero_cl_a=2.5, air_density=1.225)` | `df`, `corner: Literal["LF","RF","LR","RR"]`, `car: CarConfig` | `np.ndarray` `[N]` | Static weight + pitch/roll transfer + $\propto v^2$ downforce |
-| `WheelCornerLibrary.build` | `build(df)` | `df` with corner `SUS_TRAVEL_*`, `WHEEL_SPEED_*`, `BUMPSTOP_FORCE_*` | `FeatureMatrix` | Stage 3 single-wheel schema scaffold |
-
-### `src/features/full_chassis.py` *(Stage 4 Scaffold)*
-| Symbol | Kind / Signature | Notes |
-| :--- | :--- | :--- |
-| `ChassisSetupSpec` | `dataclass` | Setup parameters (`spring_rate_n_mm`, `arb_stiffness_n_m`, `damper_slow_n_s_m`, `rear_wing_deg`) |
-| `FullChassisLibrary.build` | `build(df)` | Stage 4 coupled chassis + setup parameter interface scaffold |
+### `src/features/wheel_corner.py` & `src/features/full_chassis.py` *(Reference Contract Scaffolds)*
+- `estimate_corner_normal_load(df, corner, car, aero_cl_a=0.0, air_density=1.225)`
+- `WheelCornerLibrary`, `ChassisSetupSpec`, `FullChassisLibrary`
 
 ---
 
 ## 5. Modeling & Evaluation (`src/modeling/`)
 
-### `src/modeling/trainer.py`
+### `src/modeling/trainer.py` *(Stage 2 SINDy)*
 | Symbol | Signature / Members | Inputs | Returns | Notes |
 | :--- | :--- | :--- | :--- | :--- |
 | `FittedYawModel` | `coefficients`, `feature_names`, `latex_names`, `optimizer`, `target_name` | — | `.predict(theta)`, `.active_mask()`, `.format_equation()`, `.to_dict()`, `.save_json(path)` | Stores fitted PySINDy STLSQ model |
@@ -133,13 +134,16 @@ Re-exports **37 public symbols** across all subpackages (`__version__ = "0.2.0"`
 | `EvaluationResult` | `y_true`, `y_pred`, `residuals`, `z_scores`, `r2`, `rmse`, `mae`, `residual_mean`, `residual_std` | — | — | Residual vector is `y_true - y_pred` |
 | `evaluate_model` | `evaluate_model(model, features, ref_mean=None, ref_std=None)` | `model: FittedYawModel`, `features: FeatureMatrix` | `EvaluationResult` | Pass training `ref_mean`/`ref_std` for out-of-sample Z-scores |
 
-### `src/modeling/stage3_physics.py` *(Stage 3 — No SINDy)*
+### `src/modeling/stage3_verification.py` *(Stage 3 — Full-Chassis Physics, Aero Drag & Bumpstop Verification)*
 | Symbol | Signature / Members | Inputs | Returns | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| `Stage3PhysicsParams` | `mu0`, `pacejka_b`, `pacejka_c`, `pacejka_e`, `load_sensitivity`, `iz_kg_m2`, `vy_compliance_s` | — | `.to_array()`, `.from_array()`, `.to_dict()` | Tire-road & yaw-inertia parameters fitted via nonlinear least squares |
-| `compute_corner_normal_loads` | `compute_corner_normal_loads(df, car, setup, fuel_liters=2.0)` | `df`, `car: CarConfig`, `setup: dict` | `(fz_corners, fz_susp_total, fz_aero_static_total)` `[N]` | Combines pitch, calibrated ARB roll share, and $v^2$ aero downforce |
-| `Stage3WheelCornerModel` | `.fit(df_train)`, `.evaluate(df)`, `.save_json(path)` | `car`, `setup`, `fuel_liters` | `Stage3SimulationResult` | Evaluates 4-wheel Pacejka lateral forces, $a_y$, $\dot{r}$, and Euler $r_{k+1}$ |
-| `run_stage3_pipeline` | `run_stage3_pipeline(cfg, df_train, df_ver=None, fuel_liters=2.0)` | `cfg: ExperimentConfig`, `df_train`, `df_ver` | `(model, train_res, ver_res)` | End-to-end Stage 3 fit & out-of-sample verification |
+| `AeroDragVerificationResult` | `dist_m`, `v_obs_kmh`, `v_pred_kmh`, `v_no_ducts_kmh`, `rmse_kmh`, `end_v_*_kmh`, `dcd_wing`, `dcd_ducts` | — | `.to_dict()` | Straight-line wing + brake-duct drag speed curve (`0–700 m`) |
+| `SuspensionVerificationState` | `fz_corners_n`, `fz_susp_total_n`, `fz_aero_static_total_n`, `z_pred_mm`, `z_obs_mm`, `bs_force_pred_n`, `bs_force_obs_n`, `pitch_deg_pred`, `pitch_deg_obs` | — | — | Full-lap suspension travel, progressive bumpstop force, and normal load predictions |
+| `ScenarioMetrics` | `key`, `label`, `start_m`, `end_m`, `n_samples`, `speed_range_kmh`, `mean_corner_rmse_mm`, `corner_rmse_mm`, `max_bs_force_*_n`, `bs_force_rmse_n` | — | `.to_dict()` | Per-segment verification summary metrics |
+| `compute_corner_normal_loads` | `compute_corner_normal_loads(df, car, setup, fuel_liters=2.0)` | `df`, `car: CarConfig`, `setup: dict` | `(fz_corners, fz_susp_total, fz_aero_static_total)` `[N]` | Combines pitch (`AX_SPEED`), calibrated ARB roll share, and $v^2$ aero downforce |
+| `verify_straight_aero_drag` | `verify_straight_aero_drag(df, car, setup, calib_dir, fuel_liters=2.0, ...)` | `df`, `car`, `setup`, `calib_dir` | `AeroDragVerificationResult` | Integrates `wing = 0` `test1.csv` WOT acceleration + `dcd_wing` + `dcd_ducts` over `0–700 m` |
+| `predict_suspension_state` | `predict_suspension_state(df, car, setup, fuel_liters=2.0)` | `df`, `car`, `setup` | `SuspensionVerificationState` | Newton-Raphson progressive bumpstop equilibrium ($F_{\mathrm{bs}} \propto (z - z_{\mathrm{thr}})^{2.73}$) + spring + ARB + aero |
+| `verify_stage3_scenarios` | `verify_stage3_scenarios(df, car, setup, fuel_liters=2.0)` | `df`, `car`, `setup` | `(SuspensionVerificationState, list[ScenarioMetrics])` | Evaluates all 5 continuous Barcelona segments (`SCENARIO_WINDOWS_M`, including `T10–T16`) |
 
 ---
 
@@ -158,7 +162,7 @@ Re-exports **37 public symbols** across all subpackages (`__version__ = "0.2.0"`
 ### `src/stats/anomaly.py`
 | Symbol | Signature | Inputs | Returns | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| `map_anomalies_to_corners` | `map_anomalies_to_corners(df, z_scores, corners, threshold_z=5.0)` | `df`, `z_scores`, `corners: list[CornerRegion]` | `AnomalySummary` | Auto-slices `df.iloc[1:-1]` if `len(df) == len(z_scores) + 2` |
+| `map_anomalies_to_corners` | `map_anomalies_to_corners(df, z_scores, corners, threshold_z=5.0)` | `df`, `z_scores`, `corners: list[CornerRegion]` | `AnomalySummary` | Auto-slices `df.iloc[2:]` if `len(df) == len(z_scores) + 2` |
 
 ---
 
@@ -167,6 +171,7 @@ Re-exports **37 public symbols** across all subpackages (`__version__ = "0.2.0"`
 ### `src/visualization/diagnostics.py`
 | Symbol | Signature | Inputs | Returns | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| `plot_yaw_acceleration_fit` | `plot_yaw_acceleration_fit(df, eval_res, title, save_path, window_seconds=None)` | `df`, `eval_res: EvaluationResult` | `Path` | Full-lap (`window_seconds=None`) observed vs. predicted + residual trace; auto-aligns `N-2` |
-| `plot_residual_distribution` | `plot_residual_distribution(eval_res, title, save_path)` | `eval_res: EvaluationResult` | `Path` | Integer **Count** histogram + empirical KDE, **Laplace**, and **Student-$t$** fits + Laplace Q-Q plot (no Gaussian assumption) |
-| `plot_race_anomaly_trace` | `plot_race_anomaly_trace(df, z_scores, z_thresh, title, save_path)` | `df`, `z_scores`, `z_thresh: float` | `Path` | Standardized $Z(t)$ trace with $\pm 3\sigma$ and $\pm Z_{\mathrm{thresh}}$ outlier markers; auto-aligns `N-2` |
+| `plot_yaw_acceleration_fit` | `plot_yaw_acceleration_fit(df, eval_res, title, save_path, window_seconds=None)` | `df`, `eval_res: EvaluationResult` | `Path` | Full-lap (`window_seconds=None`) observed vs. predicted + residual trace; auto-aligns `N-2` to `Time[2:]` |
+| `plot_finite_diff_yaw_accel` | `plot_finite_diff_yaw_accel(df, eval_res, title, save_path, dt=None)` | `df`, `eval_res: EvaluationResult` | `dict` (`r2_rd`, `rmse_rd`, `lag_frames`, `lag_ms`, `save_path`) | Strips `r_k` persistence via `(r_{k+1}-r_k)/dt` vs. raw `ROTY` difference & computes lag |
+| `plot_residual_distribution` | `plot_residual_distribution(eval_res, title, save_path)` | `eval_res: EvaluationResult` | `Path` | Integer **Count** histogram + empirical KDE, **Laplace**, and **Student-$t$** fits + Laplace Q-Q plot |
+| `plot_race_anomaly_trace` | `plot_race_anomaly_trace(df, z_scores, z_thresh, title, save_path)` | `df`, `z_scores`, `z_thresh: float` | `Path` | Standardized $Z(t)$ trace with $\pm 3\sigma$ and $\pm Z_{\mathrm{thresh}}$ outlier markers; auto-aligns `N-2` to `Time[2:]` |

@@ -10,6 +10,15 @@ from src.calibration.blackbox import (
     verify_setup_consistency,
 )
 
+from src.calibration.verification import (
+    AxleVerificationMetrics,
+    BumpstopVerificationMetrics,
+    CalibrationVerificationResult,
+    CornerTravelVerificationMetrics,
+    resolve_setup_physics,
+    verify_calibrated_coefficients,
+)
+
 __all__ = [
     "verify_setup_consistency",
     "calibrate_mass",
@@ -18,4 +27,10 @@ __all__ = [
     "calibrate_arb_stiffness",
     "calibrate_dampers",
     "run_gt3_blackbox_calibration",
+    "BumpstopVerificationMetrics",
+    "AxleVerificationMetrics",
+    "CornerTravelVerificationMetrics",
+    "CalibrationVerificationResult",
+    "resolve_setup_physics",
+    "verify_calibrated_coefficients",
 ]

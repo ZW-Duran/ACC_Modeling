@@ -1,5 +1,5 @@
 {
-  "model_type": "stage3_wheel_corner_physics",
+  "model_type": "stage4_full_chassis_physics",
   "vehicle_id": "audi_r8_gt3_evo2",
   "fuel_liters": 2.0,
   "params": {

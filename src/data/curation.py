@@ -236,6 +236,18 @@ def curate_telemetry(
 
     lap_idx, lap_dist = reconstruct_lap_distance(t, out["SPEED"].to_numpy(dtype=float), meta.beacon_markers_s)
     out["LAP_INDEX"] = lap_idx
-    out["LAP_DIST_M"] = lap_dist
+    if "Distance" in out.columns:
+        # Prefer direct MoTeC Distance [m] when exported; rebase per lap if multi-lap
+        dist_m = out["Distance"].to_numpy(dtype=float)
+        if np.max(lap_idx) > 0:
+            rebased = np.empty_like(dist_m)
+            for k in np.unique(lap_idx):
+                m_k = lap_idx == k
+                rebased[m_k] = dist_m[m_k] - dist_m[m_k][0]
+            out["LAP_DIST_M"] = rebased
+        else:
+            out["LAP_DIST_M"] = dist_m
+    else:
+        out["LAP_DIST_M"] = lap_dist
 
     return out
