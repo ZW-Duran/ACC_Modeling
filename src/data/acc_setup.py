@@ -29,6 +29,8 @@ class AccSetupMapping:
     wheel_rate_front_step_nm: int = 21000
     wheel_rate_rear_base_nm: int = 143000
     wheel_rate_rear_step_nm: int = 10000
+    wheel_rate_front_options: tuple[int, ...] | None = None
+    wheel_rate_rear_options: tuple[int, ...] | None = None
     bumpstop_rate_base_n_mm: int = 300
     bumpstop_rate_step_n_mm: int = 100
     steer_ratio_base: float = 12.0
@@ -81,12 +83,15 @@ def convert_acc_dict(
     ]
 
     # Suspension: wheelRate, bumpstops, ARBs
-    wheel_rate = [
-        (mapping.wheel_rate_front_base_nm + mapping.wheel_rate_front_step_nm * int(x))
-        if i < 2
-        else (mapping.wheel_rate_rear_base_nm + mapping.wheel_rate_rear_step_nm * int(x))
-        for i, x in enumerate(mech["wheelRate"])
-    ]
+    def _lookup_wr(idx: int, is_front: bool) -> int:
+        opts = mapping.wheel_rate_front_options if is_front else mapping.wheel_rate_rear_options
+        if opts is not None and 0 <= idx < len(opts):
+            return int(opts[idx])
+        base = mapping.wheel_rate_front_base_nm if is_front else mapping.wheel_rate_rear_base_nm
+        step = mapping.wheel_rate_front_step_nm if is_front else mapping.wheel_rate_rear_step_nm
+        return base + step * idx
+
+    wheel_rate = [_lookup_wr(int(x), i < 2) for i, x in enumerate(mech["wheelRate"])]
     bumpstop_rate = [
         mapping.bumpstop_rate_base_n_mm + mapping.bumpstop_rate_step_n_mm * int(x)
         for x in mech["bumpStopRateUp"]

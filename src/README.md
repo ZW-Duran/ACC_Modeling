@@ -40,8 +40,9 @@ Re-exports all public symbols across subpackages (`__version__ = "0.2.0"`).
 | Symbol | Kind | Key Fields / Signature | Notes |
 | :--- | :--- | :--- | :--- |
 | `AeroBaselineConfig` | `dataclass` | `reference_area_m2`, `base_cl`, `base_cd`, `base_aero_front_dist` | `.from_dict(raw)` |
-| `CarConfig` | `dataclass` | `car_id`, `mass_kg`, `front_weight_dist`, `wheelbase_m`, `track_width_front_m`, `track_width_rear_m`, `cg_height_m`, `tire_p_opt_psi`, `aero_baseline`, `calibration_slots` | Supports nested `vehicle.yaml` schema via `.from_dict(raw)` |
-| `TrackConfig`, `CornerRegion` | `dataclass` | `track_id`, `name`, `length_m`, `corners: list[CornerRegion(name, start_m, end_m)]` | Corner boundaries in `[m]` along lap |
+| `CarConfig` | `dataclass` | `car_id`, `mass_kg`, `front_weight_dist`, ..., `aero_baseline`, `calibration_slots`, `setup_bounds` | Supports nested `vehicle.yaml` schema via `.from_dict(raw)` |
+| `TrackConfig`, `CornerRegion` | `dataclass` | `CornerRegion(name, start_m, end_m, speed_class, aero_sensitivity, kerb_usage)` | Corner boundaries & physical attributes along lap |
+| `load_car_config`, `load_track_config`, `load_setup_file` | `function` | Standalone YAML/JSON loaders | Used by `main.py diagnose` and `main.py simulate` |
 | `DataConfig` | `dataclass` | `clean_csv`, `race_csv`, `clean_trim_mode`, `clean_speed_threshold_kmh`, `race_trim_mode` | Paths and trimming modes |
 | `CurationConfig` | `dataclass` | `savgol_window=5`, `savgol_polyorder=3`, `p_opt_psi=27.0`, `sigma_p_psi=1.5`, ... | Defaults tuned for 20 Hz |
 | `ModelingConfig` | `dataclass` | `formulation="planar_force"`, `stlsq_threshold=0.02`, `stlsq_alpha=0.05`, `normalize_columns=True` | PySINDy STLSQ hyperparameters |
@@ -144,6 +145,15 @@ Re-exports all public symbols across subpackages (`__version__ = "0.2.0"`).
 | `verify_straight_aero_drag` | `verify_straight_aero_drag(df, car, setup, calib_dir, fuel_liters=2.0, ...)` | `df`, `car`, `setup`, `calib_dir` | `AeroDragVerificationResult` | Integrates `wing = 0` `test1.csv` WOT acceleration + `dcd_wing` + `dcd_ducts` over `0–700 m` |
 | `predict_suspension_state` | `predict_suspension_state(df, car, setup, fuel_liters=2.0)` | `df`, `car`, `setup` | `SuspensionVerificationState` | Newton-Raphson progressive bumpstop equilibrium ($F_{\mathrm{bs}} \propto (z - z_{\mathrm{thr}})^{2.73}$) + spring + ARB + aero |
 | `verify_stage3_scenarios` | `verify_stage3_scenarios(df, car, setup, fuel_liters=2.0)` | `df`, `car`, `setup` | `(SuspensionVerificationState, list[ScenarioMetrics])` | Evaluates all 5 continuous Barcelona segments (`SCENARIO_WINDOWS_M`, including `T10–T16`) |
+
+### `src/modeling/stage4_diagnostic.py` *(Stage 4 — 7-DOF Grip Utilization & Closed-Loop AI Setup CLI)*
+| Symbol | Signature / Members | Inputs | Returns | Notes |
+| :--- | :--- | :--- | :--- | :--- |
+| `compute_vehicle_coupled_baseline` | `compute_vehicle_coupled_baseline(car, setup)` | `CarConfig`, `setup: dict` | `dict` (LLTD, rake, aero balance, $\zeta_F, \zeta_R$) | Computes coupled chassis baseline and critical damping ratios |
+| `evaluate_7dof_lap_state` | `evaluate_7dof_lap_state(df, car, setup, mu_0=None, use_predicted_travel=False, cold_pressure_delta_psi=None)` | Curated 20 Hz telemetry | `LapDiagnosticState` | 7-DOF inverse-dynamics demand vs. load-sensitive capacity ($\rho_F, \rho_R$), instantaneous LLTD, dynamic camber |
+| `extract_corner_diagnostics` | `extract_corner_diagnostics(df, state, track, baseline, setup)` | `LapDiagnosticState`, `TrackConfig` | `list[dict]` | Splits each corner into `entry` / `apex` / `exit` with saturation labels, bumpstop margins & alignment proxies |
+| `build_ai_handoff_payload` | `build_ai_handoff_payload(csv_path, df, car, setup, track, state, ui_tyres=None)` | State + configs | `dict` (`ai_handoff.json`) | Packages baseline, corners, `physics_model_spec`, and `expected_ai_response_schema` |
+| `run_counterfactual_simulation` | `run_counterfactual_simulation(df, car, base_setup, candidate_setup_raw, track, calib_dir=None)` | Baseline + candidate setup | `(diff_report, state_v1, state_v2)` | Multi-variable counterfactual 7-DOF replay & bounds validation for `python main.py simulate` |
 
 ---
 

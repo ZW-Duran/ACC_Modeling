@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import json
 from pathlib import Path
 from typing import Any, Literal
 
@@ -45,6 +46,7 @@ class CarConfig:
     tire_sigma_p_psi: float = 1.5
     aero_baseline: AeroBaselineConfig = field(default_factory=AeroBaselineConfig)
     calibration_slots: dict[str, Any] = field(default_factory=dict)
+    setup_bounds: dict[str, Any] = field(default_factory=dict)
 
     @property
     def vehicle_id(self) -> str:
@@ -60,6 +62,7 @@ class CarConfig:
         chassis = raw.get("chassis") if isinstance(raw.get("chassis"), dict) else raw
         aero_raw = raw.get("aero_baseline") if isinstance(raw.get("aero_baseline"), dict) else None
         cal_raw = raw.get("calibration_slots") if isinstance(raw.get("calibration_slots"), dict) else {}
+        bounds_raw = raw.get("setup_bounds") if isinstance(raw.get("setup_bounds"), dict) else {}
 
         return cls(
             car_id=str(raw.get("vehicle_id", raw.get("car_id", "generic_car"))),
@@ -77,6 +80,7 @@ class CarConfig:
             tire_sigma_p_psi=float(chassis.get("tire_sigma_p_psi", 1.5)),
             aero_baseline=AeroBaselineConfig.from_dict(aero_raw),
             calibration_slots=dict(cal_raw),
+            setup_bounds=dict(bounds_raw),
         )
 
 
@@ -85,6 +89,9 @@ class CornerRegion:
     name: str
     start_m: float
     end_m: float
+    speed_class: Literal["low", "medium", "high"] = "medium"
+    aero_sensitivity: Literal["low", "medium", "high"] = "medium"
+    kerb_usage: Literal["none", "low", "high"] = "low"
 
 
 @dataclass
@@ -162,6 +169,32 @@ class ExperimentConfig:
 def _read_yaml(path: str | Path) -> dict[str, Any]:
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f) or {}
+
+
+def load_car_config(path: str | Path) -> CarConfig:
+    """Load a standalone ``vehicle.yaml`` into :class:`CarConfig`."""
+    return CarConfig.from_dict(_read_yaml(path))
+
+
+def load_track_config(path: str | Path) -> TrackConfig:
+    """Load a standalone track YAML file into :class:`TrackConfig`."""
+    raw = _read_yaml(path)
+    corners = [CornerRegion(**c) for c in raw.get("corners", [])]
+    return TrackConfig(
+        track_id=raw.get("track_id", Path(path).stem),
+        name=raw.get("name", "Unknown Circuit"),
+        length_m=float(raw.get("length_m", 4657.0)),
+        corners=corners,
+    )
+
+
+def load_setup_file(path: str | Path) -> dict[str, Any]:
+    """Load a garage setup YAML or candidate JSON file."""
+    p = Path(path)
+    if p.suffix.lower() == ".json":
+        with open(p, "r", encoding="utf-8") as f:
+            return json.load(f) or {}
+    return _read_yaml(p)
 
 
 def _resolve_subpath(subpath: str | Path, base_dir: Path) -> Path:

@@ -4,9 +4,9 @@ Physics-informed vehicle dynamics modeling, black-box setup calibration, and ben
 
 ---
 
-## Engineering Evolution & 3-Stage Modeling Roadmap
+## Engineering Evolution & 4-Stage Modeling Roadmap
 
-This project systematically climbs the vehicle-dynamics modeling hierarchy—using **Stage 2 (SINDy)** as a sparse whole-vehicle benchmark, then moving to **first-principles full-chassis physics verification** in **Stage 3 (`stage3_Verification`)** rather than restricting the pipeline to SINDy:
+This project systematically climbs the vehicle-dynamics modeling hierarchy—using **Stage 2 (SINDy)** as a sparse whole-vehicle benchmark, validating full-chassis physics in **Stage 3 (`stage3_Verification`)**, and delivering a **Stage 4 closed-loop 7-DOF inverse-dynamics diagnostic & counterfactual setup simulation CLI (`main.py`)**:
 
 ### Stage 1 — Driver-Input Kinematic Regression *(Deprecated)*
 - **Approach**: Initial prototypes regressed coupled vehicle states (`SPEED`, `G_LAT`, `G_LON`, `ROTY`) directly against raw driver inputs (`STEERANGLE`, `THROTTLE`, `BRAKE`) using generic polynomials.
@@ -36,6 +36,12 @@ Because ACC exposes most garage settings as integer UI clicks, [calibration/blac
 - **Bumpstop Engagement (`bumpstop_range_mm`, unit: $\mathrm{mm}$)**: Solves the linear engagement `SUS_TRAVEL` threshold where `BUMPSTOPUP_RIDE == 1` across two bumpstop window settings.
 - **Anti-Roll Bars (`arb_stiffness_n_m`, unit: $\mathrm{N/m}$ at wheel)**: Extracts differential wheel-referenced roll stiffness $K_{\mathrm{roll,diff}} - k_w$ from steady-state cornering roll gradients $|\Delta z_{\mathrm{L-R}} / a_y|$ with bumpstop-free filtering.
 - **Virtual Damper Dyno (`dampers_n_s_m`, unit: $\mathrm{N\cdot s/m}$ at wheel)**: Extracts bump/rebound and slow/fast damping around `knee_velocity_mps = 0.05 m/s` using high-pass half-cycle logarithmic ringdown $\zeta = \ln(z_1/z_2)/\pi,\; c = 2\zeta\sqrt{k_w m_{\mathrm{corner}}}$.
+
+### Stage 4 — 7-DOF Inverse-Dynamics Grip Utilization & Closed-Loop Setup CLI (`main.py`)
+- **Design Principle**: Purely deterministic physical telemetry feature extraction (`diagnose`) + external AI multi-parameter reasoning via `ai_handoff.json` (`physics_model_spec`, `valid_setup_bounds`, `expected_ai_response_schema`) + local counterfactual 7-DOF replay (`simulate`). Zero hardcoded setup recommendation rules in Python.
+- **CLI Subcommands (`src/modeling/stage4_diagnostic.py`, `main.py`)**:
+  - `python main.py diagnose`: Outputs `ai_handoff.json` and 4-quadrant / instantaneous LLTD plots across Entry/Apex/Exit of every corner in `configs/tracks/barcelona_catalunya.yaml` (front/rear grip utilization $\rho_F, \rho_R$, instantaneous LLTD jumps, bumpstop margins in mm, alignment proxies, and critical damping ratios $\zeta_F, \zeta_R$).
+  - `python main.py simulate`: Replays an AI-generated `setup_v2.json` through the coupled 7-DOF nonlinear chassis + progressive bumpstop + aero + alignment model against baseline `setup_v1.yaml`, generating `simulation_diff_report.json` and comparative traces.
 
 ---
 
@@ -93,7 +99,9 @@ ACC_Modeling/
 ├── outputs/
 │   ├── calibration/                                     # Black-box identification reports (.json)
 │   ├── stage2_barcelona_gt3_r8_A/                       # GT3 Stage 2 full-lap & corner diagnostic plots & report
-│   └── stage3_barcelona_gt3_verification/               # GT3 Stage 3 aero drag, bumpstop & scenario verification plots & report
+│   ├── stage3_barcelona_gt3_verification/               # GT3 Stage 3 aero drag, bumpstop & scenario verification plots & report
+│   └── stage4_diagnosis/                                # Stage 4 ai_handoff.json, simulation_diff_report.json & plots
+├── main.py                       # Top-level closed-loop CLI (`diagnose` & `simulate`)
 ├── notebooks/
 │   ├── stage2_gt3_discrete_sindy.ipynb                  # Stage 2 GT3 discrete-time SINDy modeling (benchmark baseline)
 │   └── stage3_Verification.ipynb                        # Stage 3 unified aero drag, bumpstop & full-chassis verification
@@ -139,6 +147,22 @@ acc-modeling --config configs/experiments/stage2_planar_force/barcelona__audi_r8
 acc-modeling --config configs/experiments/stage2_planar_force/barcelona__audi_r8_gt3_evo2__r8_A.yaml \
   --car configs/cars/audi_r8_gt4/vehicle.yaml \
   --setup configs/cars/audi_r8_gt4/setups/Barcelona/a1.yaml
+
+# Run a Stage 4 closed-loop AI diagnostic handoff & counterfactual simulation
+python main.py diagnose \
+  --csv data/training_Barcelona_GT3.csv \
+  --vehicle configs/cars/audi_r8_gt3_evo2/vehicle.yaml \
+  --setup configs/cars/audi_r8_gt3_evo2/setups/Barcelona/r8_A.yaml \
+  --track configs/tracks/barcelona_catalunya.yaml \
+  --out outputs/stage4_diagnosis/ai_handoff.json
+
+python main.py simulate \
+  --baseline-csv data/training_Barcelona_GT3.csv \
+  --vehicle configs/cars/audi_r8_gt3_evo2/vehicle.yaml \
+  --base-setup configs/cars/audi_r8_gt3_evo2/setups/Barcelona/r8_A.yaml \
+  --candidate-setup outputs/stage4_diagnosis/setup_v2.json \
+  --track configs/tracks/barcelona_catalunya.yaml \
+  --out outputs/stage4_diagnosis/simulation_diff_report.json
 
 # Convert an ACC setup .json into repository setup YAML format
 python configs/cars/audi_r8_gt3_evo2/convert_setup.py \

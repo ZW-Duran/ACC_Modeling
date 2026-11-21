@@ -69,3 +69,31 @@ calibration_slots:
     front_splitter_df_dist_per_click: 0.0  # [-] BoP-locked on Audi R8 LMS GT3 Evo II
     front_brake_duct_dcd_per_click: 0.0030 # [-] Front duct drag delta-Cd/click (test4 ducts [2,6] vs baseline [2,3])
     rear_brake_duct_dcd_per_click: 0.0017  # [-] Rear duct drag delta-Cd/click (test3 ducts [6,3] vs baseline [2,3])
+
+# 4. Valid Setup Bounds (ACC Garage Limits & Step Sizes; placeholder bounds ready for car-specific refinement)
+setup_bounds:
+  tyres_and_alignment:
+    cold_pressure_psi: {min: 20.3, max: 35.0, step: 0.1, unit: "psi", shape: "[FL, FR, RL, RR]"}
+    toe_deg: {min: -0.40, max: 0.40, step: 0.01, unit: "deg", shape: "[FL, FR, RL, RR]"}
+    camber_deg: {front_min: -4.0, front_max: -1.5, rear_min: -3.5, rear_max: -1.0, step: 0.1, unit: "deg", shape: "[FL, FR, RL, RR]"}
+    caster_deg: {min: 8.8, max: 16.8, step: 0.23, unit: "deg", shape: "[FL, FR]"}
+  suspension:
+    wheel_rate_n_m: {front_options: [112000, 132000, 153000, 174000, 185000, 195000], rear_options: [124000, 144000, 163000, 173000, 183000, 202000], front_min: 112000, front_max: 195000, rear_min: 124000, rear_max: 202000, unit: "N/m", shape: "[FL, FR, RL, RR]"}
+    bumpstop_rate_n_mm: {min: 300, max: 2500, step: 100, unit: "N/mm", shape: "[FL, FR, RL, RR]"}
+    bumpstop_range_clicks: {front_min: 0, front_max: 32, rear_min: 0, rear_max: 72, step: 1, unit: "clicks", shape: "[FL, FR, RL, RR]"}
+    arb_clicks: {front_min: 0, front_max: 4, rear_min: 0, rear_max: 4, step: 1, unit: "clicks", shape: "[Front, Rear]"}
+  steering_ratio: {min: 12.0, max: 18.0, step: 1.0, unit: "ratio", shape: "scalar"}
+  drivetrain_and_brakes:
+    preload_diff_nm: {min: 20.0, max: 300.0, step: 10.0, unit: "Nm", shape: "scalar"}
+    brake_bias_pct: {min: 50.0, max: 71.0, step: 0.2, unit: "%", shape: "scalar"}
+  dampers_clicks:
+    bump_slow: {min: 0, max: 40, step: 1, unit: "clicks", shape: "[FL, FR, RL, RR]"}
+    bump_fast: {min: 0, max: 49, step: 1, unit: "clicks", shape: "[FL, FR, RL, RR]"}
+    rebound_slow: {min: 0, max: 40, step: 1, unit: "clicks", shape: "[FL, FR, RL, RR]"}
+    rebound_fast: {min: 0, max: 49, step: 1, unit: "clicks", shape: "[FL, FR, RL, RR]"}
+  aero_clicks:
+    rear_wing: {min: 0, max: 5, step: 1, unit: "clicks", shape: "scalar"}
+    front_splitter: {min: 0, max: 0, step: 1, unit: "clicks", note: "BoP-locked on Audi R8 LMS GT3 Evo II", shape: "scalar"}
+    brake_ducts: {min: 0, max: 6, step: 1, unit: "clicks", shape: "[Rear, Front]"}
+  ride_height_mm: {rear_min: 54, rear_max: 90, front_min: 54, front_max: 80, step: 1, unit: "mm", shape: "[Rear, Front]"}
+  fuel: {min: 2, max: 110, step: 1, unit: "L", shape: "scalar"}

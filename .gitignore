@@ -7,8 +7,10 @@ data/*.ld
 data/*.ldx
 processed_data/
 
-# Large tabular outputs (keep PNG plots and JSON reports tracked)
+# Large tabular outputs & Stage 4 ad-hoc CLI artifacts (keep Stage 2/3 PNG plots and JSON reports tracked)
 outputs/**/*.csv
+outputs/stage4_diagnosis/*
+!outputs/stage4_diagnosis/.gitkeep
 *.log
 
 # Python & environments
@@ -29,4 +31,8 @@ env/
 .vscode/
 .idea/
 .DS_Store
+Thumbs.db
+*.tmp
+*.bak
 notebooks/.ipynb_checkpoints/
+.ipynb_checkpoints/

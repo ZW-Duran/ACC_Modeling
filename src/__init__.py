@@ -37,7 +37,7 @@ from src.calibration import (
     verify_setup_consistency,
 )
 from src.cli import run_pipeline
-from src.config import ExperimentConfig, load_config
+from src.config import ExperimentConfig, load_car_config, load_config, load_setup_file, load_track_config
 from src.data import (
     TelemetryMetadata,
     compute_tire_grip_factor,
@@ -56,15 +56,26 @@ from src.features import (
 )
 from src.modeling import (
     SCENARIO_WINDOWS_M,
+    STAGE4_CHANNELS,
     AeroDragVerificationResult,
     EvaluationResult,
     FittedYawModel,
+    LapDiagnosticState,
     ScenarioMetrics,
     SuspensionVerificationState,
+    build_ai_handoff_payload,
+    build_physics_model_spec,
+    classify_grip_state,
     compute_corner_normal_loads,
+    compute_vehicle_coupled_baseline,
+    evaluate_7dof_lap_state,
     evaluate_model,
+    extract_corner_diagnostics,
     fit_yaw_sindy,
     predict_suspension_state,
+    run_counterfactual_simulation,
+    save_diagnose_plots,
+    save_simulate_plots,
     verify_stage3_scenarios,
     verify_straight_aero_drag,
 )
@@ -91,6 +102,9 @@ __all__ = [
     # Config & Pipeline
     "ExperimentConfig",
     "load_config",
+    "load_car_config",
+    "load_track_config",
+    "load_setup_file",
     "run_pipeline",
     # Data Loading & Curation
     "TelemetryMetadata",
@@ -106,7 +120,7 @@ __all__ = [
     "estimate_corner_normal_load",
     "ChassisSetupSpec",
     "FullChassisLibrary",
-    # Modeling & Stage 3 Verification
+    # Modeling, Stage 3 Verification & Stage 4 Closed-Loop Diagnostics
     "FittedYawModel",
     "fit_yaw_sindy",
     "EvaluationResult",
@@ -119,6 +133,17 @@ __all__ = [
     "predict_suspension_state",
     "verify_straight_aero_drag",
     "verify_stage3_scenarios",
+    "STAGE4_CHANNELS",
+    "LapDiagnosticState",
+    "compute_vehicle_coupled_baseline",
+    "evaluate_7dof_lap_state",
+    "classify_grip_state",
+    "extract_corner_diagnostics",
+    "build_physics_model_spec",
+    "build_ai_handoff_payload",
+    "run_counterfactual_simulation",
+    "save_diagnose_plots",
+    "save_simulate_plots",
     # Calibration & Stage 3 Verification
     "verify_setup_consistency",
     "calibrate_mass",

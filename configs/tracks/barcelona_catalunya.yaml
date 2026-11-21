@@ -5,24 +5,48 @@ corners:
   - name: "T1-T2 Elf"
     start_m: 350
     end_m: 850
+    speed_class: "medium"
+    aero_sensitivity: "medium"
+    kerb_usage: "high"
   - name: "T3 Renault"
     start_m: 850
     end_m: 1450
+    speed_class: "high"
+    aero_sensitivity: "high"
+    kerb_usage: "low"
   - name: "T4 Repsol"
     start_m: 1450
     end_m: 1850
+    speed_class: "medium"
+    aero_sensitivity: "medium"
+    kerb_usage: "low"
   - name: "T5 Seat"
     start_m: 1850
     end_m: 2250
+    speed_class: "low"
+    aero_sensitivity: "low"
+    kerb_usage: "low"
   - name: "T7-T8 Chicane"
     start_m: 2250
     end_m: 2750
+    speed_class: "medium"
+    aero_sensitivity: "medium"
+    kerb_usage: "high"
   - name: "T9 Campsa"
     start_m: 2750
     end_m: 3250
+    speed_class: "high"
+    aero_sensitivity: "high"
+    kerb_usage: "high"
   - name: "T10 La Caixa"
     start_m: 3250
     end_m: 3750
+    speed_class: "low"
+    aero_sensitivity: "low"
+    kerb_usage: "low"
   - name: "T11-T14 Sector 3"
     start_m: 3750
     end_m: 4450
+    speed_class: "low"
+    aero_sensitivity: "low"
+    kerb_usage: "high"
